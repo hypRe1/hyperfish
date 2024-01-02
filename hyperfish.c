@@ -1,27 +1,24 @@
-#include "helpers.h"
+#include "attacks.h"
+#include "board.h"
 
-U64 pawn_attacks[2][64];
-U64 knight_attacks[64];
-U64 king_attacks[64];
-
-
-void init_leapers_attacks() {
-    for (int square = 0; square < 64; square++) {
-        pawn_attacks[white][square] = mask_pawn_attacks(white, square);
-        pawn_attacks[black][square] = mask_pawn_attacks(black, square);
-        knight_attacks[square] = mask_knight_attacks(square);
-        king_attacks[square] = mask_king_attacks(square);
-    }
+void init_all() {
+    init_leapers_attacks();
+    init_slider_attacks(0);
+    init_slider_attacks(1);
 }
 
 int main() {
     printf("%s\n%s\n\n", title, version);
 
-    init_leapers_attacks();
-    for (int square = 0; square < 64; square++)
-        print_bitboard(mask_rook_attacks(square));
+    init_all();
 
-    // print_bitboard(mask_bishop_attacks(e4));
+    struct Board board;
+    
+    parse_fen(tricky_position, &board);
+    // print_bitboard(board.occupancies[both]);
+    print_board(&board);
 
-    return 1;
+    print_attacked_squares(white, &board);
+
+    return 0;
 }

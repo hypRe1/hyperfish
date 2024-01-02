@@ -1,21 +1,18 @@
 #pragma once
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "board.h"
 
-const char version[] = "v0.0.1";
+// https://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
+const char version[] = "\x1B[36mv0.0.1\x1B[0m";
 
-const char title[] = " _                           __ _     _     \n\
-| |__  _   _ _ __  _ __ ___ / _(_)___| |__  \n\
-| '_ \\| | | | '_ \\| '__/ _ \\ |_| / __| '_ \\ \n\
-| | | | |_| | |_) | | |  __/  _| \\__ \\ | | |\n\
-|_| |_|\\__, | .__/|_|  \\___|_| |_|___/_| |_|\n\
-       |___/|_|            \n\
-      /`·.¸\n\
-     /¸...¸`:·\n\
- ¸.·´  ¸   `·.¸.·´)\n\
-: © ):´;      ¸  {\n\
- `·.¸ `·  ¸.·´\\`·¸)\n\
-     `\\´´\\¸.·´\n\
-\n";
+const char title[] = "\x1B[32m\
+┬ ┬┬ ┬┌─┐┌─┐┬─┐┌─┐┬┌─┐┬ ┬\x1B[35m    ,-,\x1B[32m\n\
+├─┤└┬┘├─┘├┤ ├┬┘├┤ │└─┐├─┤\x1B[35m   ('_)<\x1B[32m\n\
+┴ ┴ ┴ ┴  └─┘┴└─└  ┴└─┘┴ ┴\x1B[35m    `-`\
+\x1B[0m";
+
 
 typedef unsigned long long U64;
 
@@ -27,10 +24,50 @@ enum {
     a4, b4, c4, d4, e4, f4, g4, h4,
     a3, b3, c3, d3, e3, f3, g3, h3,
     a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1
+    a1, b1, c1, d1, e1, f1, g1, h1, no_sq
 };
 
-enum { white, black };
+const char *square_to_coordinates[] = {
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "no_sq"
+};
+
+enum { white, black, both };
+
+enum { P, N, B, R, Q, K, p, n, b, r, q, k };
+
+enum { wk = 1, wq = 2, bk = 4, bq = 8 };
+
+const char ascii_pieces[12] = "PNBRQKpnbrqk";
+
+// char *unicode_pieces[12] = {"♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚"};
+
+int char_pieces[] = {
+    ['P'] = P,
+    ['N'] = N,
+    ['B'] = B,
+    ['R'] = R,
+    ['Q'] = Q,
+    ['K'] = K,
+    ['p'] = p,
+    ['n'] = n,
+    ['b'] = b,
+    ['r'] = r,
+    ['q'] = q,
+    ['k'] = k
+};
+
+#define empty_board "8/8/8/8/8/8/8/8 w - - "
+#define start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
+#define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
+#define killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+#define cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
 // File constants
 const U64 not_a_file = 18374403900871474942ULL;
@@ -38,90 +75,249 @@ const U64 not_h_file = 9187201950435737471ULL;
 const U64 not_hg_file = 4557430888798830399ULL;
 const U64 not_ab_file = 18229723555195321596ULL;
 
-// set/get/pop macros
-#define get_bit(bitboard, square) (bitboard & (1ULL << square))
-#define set_bit(bitboard, square) (bitboard |= (1ULL << square))
-#define pop_bit(bitboard, square) (bitboard &= ~(1ULL << square))
+// macros
+#define get_bit(bitboard, square) ((bitboard) & (1ULL << (square)))
+#define set_bit(bitboard, square) ((bitboard) |= (1ULL << (square)))
+#define pop_bit(bitboard, square) ((bitboard) &= ~(1ULL << (square)))
+#define count_bits(bitboard) __builtin_popcountll(bitboard)
+// https://stackoverflow.com/questions/757059/position-of-least-significant-bit-that-is-set
+// http://graphics.stanford.edu/%7Eseander/bithacks.html
+#define get_ls1b_index(bitboard) __builtin_ffsll(bitboard)-1
+
+// relevant occupancy bit count for every square on the board
+const int bishop_relevant_bits[64] = {
+    6, 5, 5, 5, 5, 5, 5, 6, 
+    5, 5, 5, 5, 5, 5, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5, 
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5, 
+    5, 5, 5, 5, 5, 5, 5, 5, 
+    6, 5, 5, 5, 5, 5, 5, 6
+};
+
+const int rook_relevant_bits[64] = {
+    12, 11, 11, 11, 11, 11, 11, 12, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    12, 11, 11, 11, 11, 11, 11, 12
+};
+
+U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask) {
+    U64 occupancy = 0ULL;
+    for (int count = 0; count < bits_in_mask; count++) {
+        int square = get_ls1b_index(attack_mask);
+        pop_bit(attack_mask, square);
+        if (index & (1 << count)) occupancy |= (1ULL << square);
+    }
+    return occupancy;
+}
+
+void reset_board(struct Board* board) {
+    memset(board->bitboards, 0ULL, sizeof(board->bitboards));
+    memset(board->occupancies, 0ULL, sizeof(board->occupancies));
+    board->side = 0;
+    board->enpassant = no_sq;
+    board->castle = 0;
+}
+
+void parse_fen(char *fen, struct Board* board) {
+    reset_board(board);
+    int nSlashes = 0;
+    for (int square = 0; square < 64 && *fen && *fen != ' '; ) {
+        if ((*fen >= 'b' && *fen <= 'r') || (*fen >= 'B' && *fen <= 'R')) {
+            int piece = char_pieces[*fen];
+            set_bit(board->bitboards[piece], square);
+            square++;
+            fen++;
+        } else if (*fen >= '1' && *fen <= '8') {
+            int offset = *fen - '0';
+            square += offset;
+            fen++;
+        } else if (*fen == '/'){
+            fen++;
+            nSlashes++;
+        } else {
+            printf("\x1B[31mInvalid character while parsing FEN >>> %s\x1B[0m\n", fen);
+            reset_board(board);
+            return;
+        }
+    }
+    fen++;
+    if (nSlashes != 7) {
+            printf("\x1B[31mInvalid FEN: Does not have 7 slashes\x1B[0m\n");
+            reset_board(board);
+            return;
+    }
+
+    if      (*fen == 'w') board->side = white;
+    else if (*fen == 'b') board->side = black;
+    else {
+        printf("\x1B[31mExpected w or b but got %c while parsing fen\x1B[0m\n", *fen);
+        reset_board(board);
+        return;
+    }
+    
+    fen += 2;
+    while (*fen != ' ') {
+        switch (*fen) {
+            case 'K': board->castle |= wk; break;
+            case 'Q': board->castle |= wq; break;
+            case 'k': board->castle |= bk; break;
+            case 'q': board->castle |= bq; break;
+            case '-': break;
+        }
+        fen++;
+    }
+    fen++;
+    if (*fen != '-') {
+        if (('a' <= fen[0]) && (fen[0] <= 'h') && ('0' <= fen[1]) && (fen[1] <= '8')) {
+            int file = fen[0] - 'a';
+            int rank = 8 - (fen[1] - '0');
+            board->enpassant = rank*8+file;
+        } else {
+            printf("\x1B[31mFailed to parse enpassant of FEN\x1B[0m\n");
+            reset_board(board);
+            return;
+        }
+    }
+    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
+    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+    board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
+}
+
+char* export_fen(struct Board* board) {
+    char *fen = malloc(100);
+    int index = 0;
+    int nEmpty;
+
+    for (int rank = 0; rank < 8; rank++) {
+        int nEmpty = 0;
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            int piece = -1;
+            
+            for (int bb_piece = P; bb_piece <= k; bb_piece++) {
+                if (get_bit(board->bitboards[bb_piece], square)) piece = bb_piece;
+            }
+
+            if (piece == -1) {
+                nEmpty += 1;
+            } else {
+                if (nEmpty >= 1) {
+                    fen[index] = nEmpty + '0'; 
+                    nEmpty = 0; 
+                    index++;
+                }
+                fen[index] = ascii_pieces[piece]; 
+                index++;
+            } 
+        }
+        if (nEmpty >= 1) {
+            fen[index] = nEmpty + '0'; 
+            index++;
+        }
+        
+        if (rank != 7) {
+            fen[index] = '/';
+            index++;
+        }
+    }
+    fen[index] = ' ';
+    index++;
+    fen[index] = (board->side) ? 'b' : 'w';
+    index++;
+    fen[index] = ' ';
+    index++;
+    int noRights = 1;
+
+    if (board->castle & wk) {
+        fen[index] = 'K';
+        noRights = 0;
+        index++;
+    } if (board->castle & wq) {
+        fen[index] = 'Q';
+        noRights = 0;
+        index++;
+    } if (board->castle & bk) {
+        fen[index] = 'k';
+        noRights = 0;
+        index++;
+    } if (board->castle & bq) {
+        fen[index] = 'q';
+        noRights = 0;
+        index++;
+    }
+
+    if (noRights) {
+        fen[index] = '-';
+        index++;
+    }
+
+    fen[index] = ' ';
+    index++;
+
+    if (board->enpassant == no_sq) {
+        fen[index] = '-';
+        index++;
+    } else {
+        fen[index] = square_to_coordinates[board->enpassant][0];
+        index++;
+        fen[index] = square_to_coordinates[board->enpassant][1];
+        index++;
+    }
+
+    fen[index] = ' ';
+    index++;
+
+    fen[index] = '\0';
+    return fen;
+}
 
 void print_bitboard(U64 bitboard) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {
+        printf("%d │ ", 8-rank);
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
-            if (!file) printf("%d | ", 8-rank);
             printf("%d ", get_bit(bitboard, square) ? 1 : 0);
         }
         printf("\n");
     }
-    printf("    - - - - - - - -\n");
+    printf("  ╰────────────────\n");
     printf("    a b c d e f g h\n");
     printf("\nBitboard: %llud\n\n", bitboard);
 }
 
-// attacks
-
-U64 mask_pawn_attacks(int side, int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
-    if (!side) return 0ULL | ((bitboard >> 7) & not_a_file) | ((bitboard >> 9) & not_h_file);
-    return 0ULL | ((bitboard << 7) & not_h_file) | ((bitboard << 9) & not_a_file);
-}
-
-U64 mask_knight_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
-    return 0ULL | ((bitboard >> 17) & not_h_file) 
-                | ((bitboard >> 15) & not_a_file) 
-                | ((bitboard >> 10) & not_hg_file) 
-                | ((bitboard >> 6) & not_ab_file)
-
-                | ((bitboard << 17) & not_a_file) 
-                | ((bitboard << 15) & not_h_file) 
-                | ((bitboard << 10) & not_ab_file) 
-                | ((bitboard << 6) & not_hg_file);
-}
-
-U64 mask_king_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
-    return 0ULL | (bitboard >> 8)
-                | ((bitboard >> 7) & not_a_file)
-                | ((bitboard >> 9) & not_h_file)
-                | ((bitboard >> 1) & not_h_file)
-                | ((bitboard >> 7) & not_a_file)
-
-                | (bitboard << 8)
-                | ((bitboard << 7) & not_h_file)
-                | ((bitboard << 9) & not_a_file)
-                | ((bitboard << 1) & not_a_file)
-                | ((bitboard << 7) & not_h_file);
-}
-
-U64 mask_bishop_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
-    U64 attacks = 0ULL;
-
-    int r, f;
-    int tr = square / 8;
-    int tf = square % 8;
-
-    for (r = tr + 1, f = tf + 1; r <= 6 && f <= 6; r++, f++) attacks |= (1ULL << (r*8 + f));
-    for (r = tr - 1, f = tf + 1; r >= 1 && f <= 6; r--, f++) attacks |= (1ULL << (r*8 + f));
-    for (r = tr + 1, f = tf - 1; r <= 6 && f >= 1; r++, f--) attacks |= (1ULL << (r*8 + f));
-    for (r = tr - 1, f = tf - 1; r >= 1 && f >= 1; r--, f--) attacks |= (1ULL << (r*8 + f));
-
-    return attacks;
-}
-
-U64 mask_rook_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
-    U64 attacks = 0ULL;
-
-    int r, f;
-    int tr = square / 8;
-    int tf = square % 8;
-
-    for (r = tr + 1; r <= 6; r++) attacks |= (1ULL << (r*8 + tf));
-    for (r = tr - 1; r >= 1; r--) attacks |= (1ULL << (r*8 + tf));
-    for (f = tf + 1; f <= 6; f++) attacks |= (1ULL << (tr*8 + f));
-    for (f = tf - 1; f >= 1; f--) attacks |= (1ULL << (tr*8 + f));
-
-    return attacks;
+void print_board(struct Board* board) {
+    printf("\n");
+    for (int rank = 0; rank < 8; rank++) {
+        printf("%d │ ", 8-rank);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            int piece = -1;
+            for (int bb_piece = P; bb_piece <= k; bb_piece++) {
+                if (get_bit(board->bitboards[bb_piece], square)) piece = bb_piece;
+            }
+            printf("%c ", (piece == -1) ? '.' : ascii_pieces[piece]);
+        }
+        if      (rank == 2) printf("    Side:        %s", (board->side) ? "black" : "white");
+        else if (rank == 3) printf("    Enpassant:   %s", (board->enpassant != no_sq) ? square_to_coordinates[board->enpassant] : "no");
+        else if (rank == 4) printf("    Castling:    %c %c %c %c", (board->castle & wk) ? 'K' : '-',
+                                                                  (board->castle & wq) ? 'Q' : '-',
+                                                                  (board->castle & bk) ? 'k' : '-',
+                                                                  (board->castle & bq) ? 'q' : '-');
+        else if (rank == 6) {
+            char *fen = export_fen(board);
+            printf("    Fen: %s", fen);
+            free(fen);
+        }
+        printf("\n");
+    }
+    printf("  ╰────────────────\n");
+    printf("    a b c d e f g h\n\n");
 }

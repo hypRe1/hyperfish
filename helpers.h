@@ -4,6 +4,32 @@
 #include <stdlib.h>
 #include "board.h"
 
+// macros
+#define get_bit(bitboard, square) ((bitboard) & (1ULL << (square)))
+#define set_bit(bitboard, square) ((bitboard) |= (1ULL << (square)))
+#define pop_bit(bitboard, square) ((bitboard) &= ~(1ULL << (square)))
+#define count_bits(bitboard) (__builtin_popcountll(bitboard))
+// https://stackoverflow.com/questions/757059/position-of-least-significant-bit-that-is-set
+// http://graphics.stanford.edu/%7Eseander/bithacks.html
+#define get_ls1b_index(bitboard) (__builtin_ctzll(bitboard))
+
+// https://stackoverflow.com/questions/41770887/cross-platform-definition-of-byteswap-uint64-and-byteswap-ulong
+#ifdef _MSC_VER
+#define bswap_64(x) _byteswap_uint64(x)
+#elif defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define flipVertical(bitboard) (bitboard = OSSwapInt64(bitboard))
+#else
+U64 flipVertical(U64 x) {
+   const U64 k1 = C64(0x00FF00FF00FF00FF);
+   const U64 k2 = C64(0x0000FFFF0000FFFF);
+   x = ((x >>  8) & k1) | ((x & k1) <<  8);
+   x = ((x >> 16) & k2) | ((x & k2) << 16);
+   x = ( x >> 32)       | ( x       << 32);
+   return x;
+}
+#endif
+
 // https://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
 const char version[] = "\x1B[36mv0.0.1\x1B[0m";
 
@@ -69,20 +95,16 @@ int char_pieces[] = {
 #define killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 #define cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
-// File constants
-const U64 not_a_file = 18374403900871474942ULL;
-const U64 not_h_file = 9187201950435737471ULL;
-const U64 not_hg_file = 4557430888798830399ULL;
-const U64 not_ab_file = 18229723555195321596ULL;
+#define not_a_file (18374403900871474942ULL)
+#define not_h_file (9187201950435737471ULL)
+#define not_hg_file (4557430888798830399ULL)
+#define not_ab_file (18229723555195321596ULL)
 
-// macros
-#define get_bit(bitboard, square) ((bitboard) & (1ULL << (square)))
-#define set_bit(bitboard, square) ((bitboard) |= (1ULL << (square)))
-#define pop_bit(bitboard, square) ((bitboard) &= ~(1ULL << (square)))
-#define count_bits(bitboard) __builtin_popcountll(bitboard)
-// https://stackoverflow.com/questions/757059/position-of-least-significant-bit-that-is-set
-// http://graphics.stanford.edu/%7Eseander/bithacks.html
-#define get_ls1b_index(bitboard) __builtin_ffsll(bitboard)-1
+#define rank2 (71776119061217280ULL)
+#define rank3 (280375465082880ULL)
+#define rank6 (16711680)
+#define rank7 (65280ULL)
+
 
 // relevant occupancy bit count for every square on the board
 const int bishop_relevant_bits[64] = {

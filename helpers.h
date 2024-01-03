@@ -14,15 +14,15 @@
 #define get_ls1b_index(bitboard) (__builtin_ctzll(bitboard))
 
 // https://stackoverflow.com/questions/41770887/cross-platform-definition-of-byteswap-uint64-and-byteswap-ulong
-#ifdef _MSC_VER
-#define bswap_64(x) _byteswap_uint64(x)
+#if defined(_WIN32)
+#define flipVertical(bitboard) _byteswap_uint64(bitboard)
 #elif defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
 #define flipVertical(bitboard) (bitboard = OSSwapInt64(bitboard))
 #else
-U64 flipVertical(U64 x) {
-   const U64 k1 = C64(0x00FF00FF00FF00FF);
-   const U64 k2 = C64(0x0000FFFF0000FFFF);
+U64 flipVertical(U64 bitboard) {
+   const U64 k1 = 0x00FF00FF00FF00FFULL;
+   const U64 k2 = 0x0000FFFF0000FFFFULL;
    x = ((x >>  8) & k1) | ((x & k1) <<  8);
    x = ((x >> 16) & k2) | ((x & k2) << 16);
    x = ( x >> 32)       | ( x       << 32);
@@ -32,13 +32,7 @@ U64 flipVertical(U64 x) {
 
 // https://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
 const char version[] = "\x1B[36mv0.0.1\x1B[0m";
-
-const char title[] = "\x1B[32m\
-┬ ┬┬ ┬┌─┐┌─┐┬─┐┌─┐┬┌─┐┬ ┬\x1B[35m    ,-,\x1B[32m\n\
-├─┤└┬┘├─┘├┤ ├┬┘├┤ │└─┐├─┤\x1B[35m   ('_)<\x1B[32m\n\
-┴ ┴ ┴ ┴  └─┘┴└─└  ┴└─┘┴ ┴\x1B[35m    `-`\
-\x1B[0m";
-
+const char title[] = "\x1B[32mhyperfish\x1B[0m";
 
 typedef unsigned long long U64;
 
@@ -70,9 +64,7 @@ enum { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 enum { wk = 1, wq = 2, bk = 4, bq = 8 };
 
-const char ascii_pieces[12] = "PNBRQKpnbrqk";
-
-// char *unicode_pieces[12] = {"♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚"};
+const char ascii_pieces[] = "PNBRQKpnbrqk";
 
 int char_pieces[] = {
     ['P'] = P,
@@ -212,8 +204,7 @@ void parse_fen(char *fen, struct Board* board) {
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
 }
 
-char* export_fen(struct Board* board) {
-    char *fen = malloc(100);
+void export_fen(struct Board* board, char* fen) {
     int index = 0;
     int nEmpty;
 
@@ -297,28 +288,26 @@ char* export_fen(struct Board* board) {
     index++;
 
     fen[index] = '\0';
-    return fen;
 }
 
 void print_bitboard(U64 bitboard) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {
-        printf("%d │ ", 8-rank);
+        printf("%d   ", 8-rank);
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
             printf("%d ", get_bit(bitboard, square) ? 1 : 0);
         }
         printf("\n");
     }
-    printf("  ╰────────────────\n");
-    printf("    a b c d e f g h\n");
+    printf("\n    a b c d e f g h\n");
     printf("\nBitboard: %llud\n\n", bitboard);
 }
 
 void print_board(struct Board* board) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {
-        printf("%d │ ", 8-rank);
+        printf("%d   ", 8-rank);
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
             int piece = -1;
@@ -334,12 +323,11 @@ void print_board(struct Board* board) {
                                                                   (board->castle & bk) ? 'k' : '-',
                                                                   (board->castle & bq) ? 'q' : '-');
         else if (rank == 6) {
-            char *fen = export_fen(board);
+            char fen[100];
+            export_fen(board, fen);
             printf("    Fen: %s", fen);
-            free(fen);
         }
         printf("\n");
     }
-    printf("  ╰────────────────\n");
-    printf("    a b c d e f g h\n\n");
+    printf("\n    a b c d e f g h\n\n");
 }

@@ -18,15 +18,16 @@
 #define flipVertical(bitboard) _byteswap_uint64(bitboard)
 #elif defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
-#define flipVertical(bitboard) (bitboard = OSSwapInt64(bitboard))
+#define flipVertical(bitboard) (OSSwapInt64(bitboard))
 #else
+// https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating
 U64 flipVertical(U64 bitboard) {
    const U64 k1 = 0x00FF00FF00FF00FFULL;
    const U64 k2 = 0x0000FFFF0000FFFFULL;
-   x = ((x >>  8) & k1) | ((x & k1) <<  8);
-   x = ((x >> 16) & k2) | ((x & k2) << 16);
-   x = ( x >> 32)       | ( x       << 32);
-   return x;
+   bitboard = ((bitboard >>  8) & k1) | ((bitboard & k1) <<  8);
+   bitboard = ((bitboard >> 16) & k2) | ((bitboard & k2) << 16);
+   bitboard = ( bitboard >> 32)       | ( bitboard       << 32);
+   return bitboard;
 }
 #endif
 

@@ -31,6 +31,28 @@ U64 flipVertical(U64 bitboard) {
 }
 #endif
 
+// 32 bit move encoding
+// https://www.chessprogramming.org/Encoding_Moves Extended Move Structure
+// source: 6 bits
+// target: 6 bits
+// sourcepiece: 3 bits
+// targetpiece: 3 bits
+// promotion: 1 bit
+// capture: 1 bit
+// special: 2 bits
+// heuristc: 10 bits
+
+#define encode_move(source, target, piece, promoted, capture, double, enpassant, castling) \
+    ((source) | (target << 6) | (piece << 12) | (capture << 16) | (double << 20) | (castling << 21) | (promoted << 22) | (enpassant << 23))
+#define get_move_source(move) (move & 0x3f)
+#define get_move_target(move) ((move & 0xfc0) >> 6)
+#define get_move_piece(move) ((move & 0xf000) >> 12)
+#define get_move_capture(move) ((move & 0xf0000) >> 16)
+#define get_move_double(move) (move & 0x100000)
+#define get_move_castling(move) (move & 0x200000)
+#define get_move_promoted(move) (move & 0x400000)
+#define get_move_enpassant(move) (move & 0x800000)
+
 // https://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
 const char version[] = "\x1B[36mv0.0.1\x1B[0m";
 const char title[] = "\x1B[32mhyperfish\x1B[0m";

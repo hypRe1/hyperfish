@@ -170,16 +170,62 @@ void generate_king_moves(U64 bitboard, U64 enemyOrEmpty) {
 }
 
 
-void generate_bishop_moves(U64 bitboard, U64 occupancies) {
+void generate_bishop_moves(U64 bitboard, U64 enemyOrEmpty, U64 occupancy) {
+    U64 bTargets;
 
+    while (bitboard) {
+        int fromSquare = get_ls1b_index(bitboard);
+        bitboard &= bitboard - 1;
+
+        bTargets = get_bishop_attacks(fromSquare, occupancy) & enemyOrEmpty;
+
+        while (bTargets) {
+            int toSquare = get_ls1b_index(bTargets);
+            bTargets &= bTargets - 1;
+
+            printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "BISHOP_MOVE");
+        }
+    }
 }
 
-void generate_rook_moves(U64 bitboard, U64 occupancies) {
+void generate_rook_moves(U64 bitboard, U64 enemyOrEmpty, U64 occupancy) {
+    U64 rTargets;
 
+    while (bitboard) {
+        int fromSquare = get_ls1b_index(bitboard);
+        bitboard &= bitboard - 1;
+
+        rTargets = get_rook_attacks(fromSquare, occupancy) & enemyOrEmpty;
+
+        while (rTargets) {
+            int toSquare = get_ls1b_index(rTargets);
+            rTargets &= rTargets - 1;
+
+            printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "ROOK_MOVE");
+        }
+    }
 }
 
-void generate_queen_moves(U64 bitboard, U64 occupancies) {
-    
+void generate_queen_moves(U64 bitboard, U64 enemyOrEmpty, U64 occupancy) {
+    // generate_bishop_moves(bitboard, enemyOrEmpty, occupancy);
+    // generate_rook_moves(bitboard, enemyOrEmpty, occupancy);
+
+    U64 qTargets;
+
+    while (bitboard) {
+        int fromSquare = get_ls1b_index(bitboard);
+        bitboard &= bitboard - 1;
+
+        qTargets = get_queen_attacks(fromSquare, occupancy) & enemyOrEmpty;
+
+        while (qTargets) {
+            int toSquare = get_ls1b_index(qTargets);
+            qTargets &= qTargets - 1;
+
+            printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "QUEEN_MOVE");
+        }
+    }
+
 }
  
 static inline void generate_moves(struct Board* board) {
@@ -190,11 +236,16 @@ static inline void generate_moves(struct Board* board) {
         castling_moves_white(board);
         generate_knight_moves(board->bitboards[N], ~(board->occupancies[white]));
         generate_king_moves(board->bitboards[K], ~(board->occupancies[white]));
+        generate_bishop_moves(board->bitboards[B], ~(board->occupancies[white]), board->occupancies[both]);
+        generate_rook_moves(board->bitboards[R], ~(board->occupancies[white]), board->occupancies[both]);
+        generate_queen_moves(board->bitboards[R], ~(board->occupancies[white]), board->occupancies[both]);
     } else if (board->side == black) {
         quiet_pawn_moves_black(board->bitboards[p], ~(board->occupancies[both]));
         pawn_captures_black(board->bitboards[p], board->occupancies[white], board->enpassant);
         castling_moves_black(board);
         generate_knight_moves(board->bitboards[n], ~(board->occupancies[black]));
         generate_king_moves(board->bitboards[k], ~(board->occupancies[black]));
+        generate_rook_moves(board->bitboards[r], ~(board->occupancies[black]), board->occupancies[both]);
+        generate_queen_moves(board->bitboards[r], ~(board->occupancies[black]), board->occupancies[both]);
     }
 }

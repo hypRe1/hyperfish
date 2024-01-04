@@ -101,13 +101,87 @@ void pawn_captures_black(U64 bitboard, U64 enemy, int enpassant) {
     }
 }
 
+void castling_moves_white(struct Board* board) {
+    if (board->castle & wk) {
+        if ((board->occupancies[both] & 6917529027641081856ULL) == 0) {
+            if (!(is_square_attacked(e1, black, board) || is_square_attacked(f1, black, board)))
+                printf("castling move: e1g1\n");
+        }
+    }
+    
+    if (board->castle & wq) {
+        if ((board->occupancies[both] & 1008806316530991104ULL) == 0) {
+            if (!(is_square_attacked(e1, black, board) || is_square_attacked(d1, black, board)))
+                printf("castling move: e1c1\n");
+        }
+    }
+}
+
+void castling_moves_black(struct Board* board) {
+    if (board->castle & wk) {
+        if ((board->occupancies[both] & 96ULL) == 0) {
+            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, white, board)))
+                printf("castling move: e8g8\n");
+        }
+    }
+    
+    if (board->castle & wq) {
+        if ((board->occupancies[both] & 14ULL) == 0) {
+            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, black, board)))
+                printf("castling move: e8c8\n");
+        }
+    }
+}
+
+void generate_knight_moves(U64 bitboard, U64 enemyOrEmpty) {
+    U64 nTargets;
+
+    while (bitboard) {
+        int fromSquare = get_ls1b_index(bitboard);
+        bitboard &= bitboard - 1;
+
+        nTargets = knight_attacks[fromSquare] & enemyOrEmpty;
+
+        while (nTargets) {
+            int toSquare = get_ls1b_index(nTargets);
+            nTargets &= nTargets - 1;
+
+            printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "KNIGHT_MOVE");
+        }
+
+    }
+}
+
+// void generate_bishop_moves(U64 bitboard, U64 occupancies) {
+//     U64 bTargets;
+
+//     while (bitboard) {
+//         int fromSquare = get_ls1b_index(bitboard);
+//         bitboard &= bitboard - 1;
+
+//         bTargets = get_bishop_attacks(fromSquare, occupancies);
+
+//         while (bTargets) {
+//             int toSquare = get_ls1b_index(nTargets);
+//             bTargets &= bTargets - 1;
+
+//             printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "KNIGHT_MOVE");
+//         }
+
+//     }
+// }
+
 static inline void generate_moves(struct Board* board) {
     int source_square, target_square;
     if (board->side == white) {
         quiet_pawn_moves_white(board->bitboards[P], ~(board->occupancies[both]));
         pawn_captures_white(board->bitboards[P], board->occupancies[black], board->enpassant);
+        castling_moves_white(board);
+        generate_knight_moves(board->bitboards[N], ~(board->occupancies[white]));
     } else if (board->side == black) {
         quiet_pawn_moves_black(board->bitboards[p], ~(board->occupancies[both]));
         pawn_captures_black(board->bitboards[p], board->occupancies[white], board->enpassant);
+        castling_moves_black(board);
+        generate_knight_moves(board->bitboards[n], ~(board->occupancies[black]));
     }
 }

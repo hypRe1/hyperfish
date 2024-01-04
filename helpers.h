@@ -15,7 +15,7 @@
 
 // https://stackoverflow.com/questions/41770887/cross-platform-definition-of-byteswap-uint64-and-byteswap-ulong
 #if defined(_WIN32)
-#define flipVertical(bitboard) _byteswap_uint64(bitboard)
+#define flipVertical(bitboard) (_byteswap_uint64(bitboard))
 #elif defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
 #define flipVertical(bitboard) (OSSwapInt64(bitboard))

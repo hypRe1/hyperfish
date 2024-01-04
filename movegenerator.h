@@ -105,14 +105,14 @@ void castling_moves_white(struct Board* board) {
     if (board->castle & wk) {
         if ((board->occupancies[both] & 6917529027641081856ULL) == 0) {
             if (!(is_square_attacked(e1, black, board) || is_square_attacked(f1, black, board)))
-                printf("castling move: e1g1\n");
+                printf("e1g1 CASTLING_MOVE\n");
         }
     }
     
     if (board->castle & wq) {
         if ((board->occupancies[both] & 1008806316530991104ULL) == 0) {
             if (!(is_square_attacked(e1, black, board) || is_square_attacked(d1, black, board)))
-                printf("castling move: e1c1\n");
+                printf("e1c1 CASTLING_MOVE\n");
         }
     }
 }
@@ -121,14 +121,14 @@ void castling_moves_black(struct Board* board) {
     if (board->castle & wk) {
         if ((board->occupancies[both] & 96ULL) == 0) {
             if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, white, board)))
-                printf("castling move: e8g8\n");
+                printf("e8g8 CASTLING_MOVE\n");
         }
     }
     
     if (board->castle & wq) {
         if ((board->occupancies[both] & 14ULL) == 0) {
             if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, black, board)))
-                printf("castling move: e8c8\n");
+                printf("e8c8 CASTLING_MOVE\n");
         }
     }
 }
@@ -148,29 +148,40 @@ void generate_knight_moves(U64 bitboard, U64 enemyOrEmpty) {
 
             printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "KNIGHT_MOVE");
         }
-
     }
 }
 
-// void generate_bishop_moves(U64 bitboard, U64 occupancies) {
-//     U64 bTargets;
+void generate_king_moves(U64 bitboard, U64 enemyOrEmpty) {
+    U64 kTargets;
 
-//     while (bitboard) {
-//         int fromSquare = get_ls1b_index(bitboard);
-//         bitboard &= bitboard - 1;
+    while (bitboard) {
+        int fromSquare = get_ls1b_index(bitboard);
+        bitboard &= bitboard - 1;
 
-//         bTargets = get_bishop_attacks(fromSquare, occupancies);
+        kTargets = king_attacks[fromSquare] & enemyOrEmpty;
 
-//         while (bTargets) {
-//             int toSquare = get_ls1b_index(nTargets);
-//             bTargets &= bTargets - 1;
+        while (kTargets) {
+            int toSquare = get_ls1b_index(kTargets);
+            kTargets &= kTargets - 1;
 
-//             printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "KNIGHT_MOVE");
-//         }
+            printf("%s%s %s\n", square_to_coordinates[fromSquare], square_to_coordinates[toSquare], "KING_MOVE");
+        }
+    }
+}
 
-//     }
-// }
 
+void generate_bishop_moves(U64 bitboard, U64 occupancies) {
+
+}
+
+void generate_rook_moves(U64 bitboard, U64 occupancies) {
+
+}
+
+void generate_queen_moves(U64 bitboard, U64 occupancies) {
+    
+}
+ 
 static inline void generate_moves(struct Board* board) {
     int source_square, target_square;
     if (board->side == white) {
@@ -178,10 +189,12 @@ static inline void generate_moves(struct Board* board) {
         pawn_captures_white(board->bitboards[P], board->occupancies[black], board->enpassant);
         castling_moves_white(board);
         generate_knight_moves(board->bitboards[N], ~(board->occupancies[white]));
+        generate_king_moves(board->bitboards[K], ~(board->occupancies[white]));
     } else if (board->side == black) {
         quiet_pawn_moves_black(board->bitboards[p], ~(board->occupancies[both]));
         pawn_captures_black(board->bitboards[p], board->occupancies[white], board->enpassant);
         castling_moves_black(board);
         generate_knight_moves(board->bitboards[n], ~(board->occupancies[black]));
+        generate_king_moves(board->bitboards[k], ~(board->occupancies[black]));
     }
 }

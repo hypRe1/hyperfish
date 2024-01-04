@@ -15,7 +15,7 @@ int main() {
     init_all();
 
     struct Board board;
-    parse_fen(tricky_position, &board);
+    parse_fen(cmk_position, &board);
     print_board(&board);
     generate_moves(&board);
 

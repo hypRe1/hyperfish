@@ -359,7 +359,13 @@ static inline void make_move(struct Board* board, int move) {
     int isCapture = get_move_capture(move);
     int isPromotion = get_move_promotion(move);
 
-    if (side == black) sourceP += 6;
+    if (side == black) {
+        sourceP += 6;
+        board->side = white;
+    } else {
+        board->side = black;
+    }
+    
     pop_bit(board->bitboards[sourceP], source);
 
     if (isPromotion) {
@@ -373,36 +379,14 @@ static inline void make_move(struct Board* board, int move) {
         int captured = get_move_targetp(move);
         if (side == white) {
             captured += 6;
-            pop_bit(board->occupancies[white], source);
-            pop_bit(board->occupancies[both], source);
-            pop_bit(board->occupancies[black], target);
-            set_bit(board->occupancies[white], target);
-        } else {
-            pop_bit(board->occupancies[black], source);
-            pop_bit(board->occupancies[both], source);
-            pop_bit(board->occupancies[white], target);
-            set_bit(board->occupancies[black], target);
         }
         pop_bit(board->bitboards[captured], target);
     } else if (~(isPromotion) && ~(isCapture)) {
         // king-side castling
         if (get_move_special(move) == 2) {
             if (side == white) {
-                pop_bit(board->occupancies[white], h1);
-                set_bit(board->occupancies[white], f1);
-                pop_bit(board->occupancies[both], h1);
-                set_bit(board->occupancies[both], f1);
-
                 pop_bit(board->bitboards[R], h1);
                 set_bit(board->bitboards[R], f1);
-            } else {
-                pop_bit(board->occupancies[black], h8); // shorten to one bitwise add , or
-                set_bit(board->occupancies[black], f8);
-                pop_bit(board->occupancies[both], h8);
-                set_bit(board->occupancies[both], f8);
-
-                pop_bit(board->bitboards[r], h8);
-                set_bit(board->bitboards[r], f8);
             }
         }
         // queen-side castling
@@ -419,6 +403,10 @@ static inline void make_move(struct Board* board, int move) {
 
     board->castle &= castling_rights[source];
     board->castle &= castling_rights[target];
+
+    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
+    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+    board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
 
 }
 

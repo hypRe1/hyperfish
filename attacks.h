@@ -125,16 +125,15 @@ U64 rook_attacks_on_the_fly(int square, U64 blockers) {
     return attacks;
 }
 
-// generate candidate for magic number
+
 U64 generate_magic_number() {
     return get_random_U64_number() & get_random_U64_number() & get_random_U64_number();
 }
 
-// find magic numbers through brute force
+
 U64 find_magic_number(int square, int relevant_bits, int isBishop) {
     U64 occupancies[4096];
 
-    // init attack tables
     U64 attacks[4096];
 
     U64 used_attacks[4096];

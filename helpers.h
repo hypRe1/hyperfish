@@ -46,22 +46,22 @@ U64 flipVertical(U64 bitboard) {
 // 0000 0000 0000 0000 0000 1111 1100 0000 target
 // 0000 0000 0000 0000 0111 0000 0000 0000 sourcep
 // 0000 0000 0000 0011 1000 0000 0000 0000 targetp
-// 0000 0000 0000 0100 0000 0000 0000 0000 promotion
-// 0000 0000 0000 1000 0000 0000 0000 0000 capture
-// 0000 0000 0011 0000 0000 0000 0000 0000 special
+// 0000 0000 0000 1100 0000 0000 0000 0000 special
+// 0000 0000 0001 0000 0000 0000 0000 0000 capture
+// 0000 0000 0010 0000 0000 0000 0000 0000 promotion
 // 0000 0000 0011 1100 0000 0000 0000 0000 code
 // 1111 1111 1100 0000 0000 0000 0000 0000 heuristic
 
 #define encode_move(source, target, sourcepiece, targetpiece, promotion, capture, special, heuristic) \
-    ((source) | ((target) << 6) | ((sourcepiece) << 12) | ((targetpiece) << 15) | ((promotion) << 18) | ((capture) << 19) | ((special) << 20) | ((heuristic << 22)))
+    ((source) | ((target) << 6) | ((sourcepiece) << 12) | ((targetpiece) << 15) | ((special) << 18) | ((capture) << 20) | ((promotion) << 21) |  ((heuristic << 22)))
 
 #define get_move_source(move)       ((move) & 0x3f)
 #define get_move_target(move)       (((move) & 0xfc0) >> 6)
 #define get_move_sourcep(move)      (((move) & 0x7000) >> 12)
 #define get_move_targetp(move)      (((move) & 0x38000) >> 15)
-#define get_move_promotion(move)    ((move) & 0x40000)
-#define get_move_capture(move)      ((move) & 0x80000)
-#define get_move_special(move)      (((move) & 0x300000) >> 20)
+#define get_move_special(move)      (((move) & 0xc0000) >> 18)
+#define get_move_capture(move)      ((move) & 0x100000)
+#define get_move_promotion(move)    ((move) & 0x200000)
 #define get_move_code(move)         (((move) & 0x3c0000) >> 18)
 #define get_move_heuristic(move)    (((move) & 0xffc00000) >> 22)
 
@@ -340,16 +340,20 @@ void print_bitboard(U64 bitboard) {
     printf("\nBitboard: %llud\n\n", bitboard);
 }
 
+int get_piece(struct Board* board, int square) {
+    for (int piece = P; piece <= k; piece++) {
+        if (get_bit(board->bitboards[piece], square)) return piece;
+    }
+    return -1;
+}
+
 void print_board(struct Board* board) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {
         printf("%d   ", 8-rank);
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
-            int piece = -1;
-            for (int bb_piece = P; bb_piece <= k; bb_piece++) {
-                if (get_bit(board->bitboards[bb_piece], square)) piece = bb_piece;
-            }
+            int piece = get_piece(board, square);
             printf("%c ", (piece == -1) ? '.' : ascii_pieces[piece]);
         }
         if      (rank == 2) printf("    Side:        %s", (board->side) ? "black" : "white");
@@ -368,16 +372,42 @@ void print_board(struct Board* board) {
     printf("\n    a b c d e f g h\n\n");
 }
 
+void print_board_flipped(struct Board* board) {
+    printf("\n");
+    for (int rank = 7; rank > -1; rank--) {
+        printf("%d   ", 8-rank);
+        for (int file = 7; file > -1; file--) {
+            int square = rank * 8 + file;
+            int piece = get_piece(board, square);
+            printf("%c ", (piece == -1) ? '.' : ascii_pieces[piece]);
+        }
+        if      (rank == 5) printf("    Side:        %s", (board->side) ? "black" : "white");
+        else if (rank == 4) printf("    Enpassant:   %s", (board->enpassant != no_sq) ? square_to_coordinates[board->enpassant] : "no");
+        else if (rank == 3) printf("    Castling:    %c %c %c %c", (board->castle & wk) ? 'K' : '-',
+                                                                  (board->castle & wq) ? 'Q' : '-',
+                                                                  (board->castle & bk) ? 'k' : '-',
+                                                                  (board->castle & bq) ? 'q' : '-');
+        else if (rank == 1) {
+            char fen[100];
+            export_fen(board, fen);
+            printf("    Fen: %s", fen);
+        }
+        printf("\n");
+    }
+    printf("\n    h g f e d c b a\n\n");
+}
+
 void print_move(unsigned int move) {
     int from = get_move_source(move);
     int to = get_move_target(move);
     int code = get_move_code(move);
 
+    // printf("%u %u\n", move, code);
     printf("%s%s", square_to_coordinates[from], square_to_coordinates[to]);
 
     switch (code) {
         case (0): {  // Quiet move
-            printf(" Quiet move %s\n", ascii_pieces[get_move_sourcep(move)]);
+            printf(" Quiet move %c\n", ascii_pieces[get_move_sourcep(move)]);
             break;
         }
         case (1): {   // Double pawn push
@@ -393,45 +423,44 @@ void print_move(unsigned int move) {
             break;
         }
         case (4): {   // Captures
-            printf(" %s captured %s\n", ascii_pieces[get_move_sourcep(move)], ascii_pieces[get_move_targetp(move)]);
+            printf(" %c captured %c\n", ascii_pieces[get_move_sourcep(move)], ascii_pieces[get_move_targetp(move)]);
             break;
         }
         case (5): {   // EP-capture
             printf(" Enpassant\n");
             break;
         }
-        case (6): {   // Knight-promotion
+        case (8): {   // Knight-promotion
             printf("k\n");
             break;
         }
-        case (7): {   // Bishop-promotion
+        case (9): {   // Bishop-promotion
             printf("b\n");
             break;
         }
-        case (8): {   // Rook-promotion
+        case (10): {   // Rook-promotion
             printf("r\n");
             break;
         }
-        case (9): {   // Queen-promotion
+        case (11): {   // Queen-promotion
             printf("q\n");
             break;
         }
-        case (10): {  // Knight-promotion capture
-            printf("n Captured %s\n", ascii_pieces[get_move_targetp(move)]);
+        case (12): {  // Knight-promotion capture
+            printf("n Captured %c\n", ascii_pieces[get_move_targetp(move)]);
             break;
         }
-        case (11): {  // Bishop-promotion capture
-            printf("b Captured %s\n", ascii_pieces[get_move_targetp(move)]);
+        case (13): {  // Bishop-promotion capture
+            printf("b Captured %c\n", ascii_pieces[get_move_targetp(move)]);
             break;
         }
-        case (12): {  // Rook-promotion capture
-            printf("r Captured %s\n", ascii_pieces[get_move_targetp(move)]);
+        case (14): {  // Rook-promotion capture
+            printf("r Captured %c\n", ascii_pieces[get_move_targetp(move)]);
             break;
         }
-        case (13): {  // Queen-promotion capture
-            printf("q Captured %s\n", ascii_pieces[get_move_targetp(move)]);
+        case (15): {  // Queen-promotion capture
+            printf("q Captured %c\n", ascii_pieces[get_move_targetp(move)]);
             break;
         }
     }
-
 }

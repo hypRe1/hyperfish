@@ -15,9 +15,22 @@ int main() {
     init_all();
 
     struct Board board;
-    parse_fen(start_position, &board);
+    struct Moves move_list;
+    parse_fen(tricky_position, &board);
     print_board(&board);
-    generate_moves(&board);
+    generate_moves(&board, &move_list);
+    // print_move_list(&move_list);
 
+    struct Board new;
+    int index;
+    int count = move_list.count;
+    for (index = 0; index < count; index++) {
+        getchar();
+        new = board;
+        make_move(&new, move_list.moves[index]);
+        print_board(&new);
+    }
+    
     return 0;
 }
+

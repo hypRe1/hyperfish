@@ -351,7 +351,7 @@ const unsigned short castling_rights[64] = {
     13, 15, 15, 15, 12, 15, 15, 14
 };
 
-static inline void make_move(struct Board* board, int move) {
+static inline int make_move(struct Board* board, int move) {
     int side = board->side;
     int source = get_move_source(move);
     int target = get_move_target(move);
@@ -359,11 +359,8 @@ static inline void make_move(struct Board* board, int move) {
     int isCapture = get_move_capture(move);
     int isPromotion = get_move_promotion(move);
 
-    if (side == black) {
+    if (side) {  // black
         sourceP += 6;
-        board->side = white;
-    } else {
-        board->side = black;
     }
     
     pop_bit(board->bitboards[sourceP], source);
@@ -377,26 +374,30 @@ static inline void make_move(struct Board* board, int move) {
 
     if (isCapture) {
         int captured = get_move_targetp(move);
-        if (side == white) {
+        if (!side) {  // white
             captured += 6;
         }
         pop_bit(board->bitboards[captured], target);
-    } else if (~(isPromotion) && ~(isCapture)) {
+
+    } else if (!isPromotion) {
         // king-side castling
         if (get_move_special(move) == 2) {
-            if (side == white) {
+            if (side) {
+                pop_bit(board->bitboards[R], h8);
+                set_bit(board->bitboards[R], f8);
+            } else {
                 pop_bit(board->bitboards[R], h1);
                 set_bit(board->bitboards[R], f1);
             }
         }
         // queen-side castling
         if (get_move_special(move) == 3) {
-            if (side == white) {
-                pop_bit(board->bitboards[R], a1);
-                set_bit(board->bitboards[R], d1);
-            } else {
+            if (side) {
                 pop_bit(board->bitboards[r], a8);
                 set_bit(board->bitboards[r], d8);
+            } else {
+                pop_bit(board->bitboards[R], a1);
+                set_bit(board->bitboards[R], d1);
             }
         }
     }
@@ -404,10 +405,19 @@ static inline void make_move(struct Board* board, int move) {
     board->castle &= castling_rights[source];
     board->castle &= castling_rights[target];
 
+    memset(board->occupancies, 0ULL, sizeof(board->occupancies));
     board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
     board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
 
+    board->side = side ^ 1;
+
+    if (is_square_attacked((side) ? get_ls1b_index(board->bitboards[K]) : get_ls1b_index(board->bitboards[k]), side, board)) {
+        // illegal move - take back
+        return 0;
+    }
+
+    return 1;
 }
 
 

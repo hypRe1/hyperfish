@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "board.h"
 
 // macros
@@ -173,6 +174,12 @@ void reset_board(struct Board* board) {
     board->side = 0;
     board->enpassant = no_sq;
     board->castle = 0;
+}
+
+long long timeInMilliseconds() {
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
 }
 
 void parse_fen(char *fen, struct Board* board) {

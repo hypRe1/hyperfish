@@ -69,14 +69,20 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
 
 void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 wPawnTargets;
-
-    set_bit(enemy, enpassant);
+    U64 wPawnEnpassant;
+    U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
         int fromSquare = get_ls1b_index(bitboard);
         bitboard &= bitboard - 1;
 
         wPawnTargets = pawn_attacks[white][fromSquare] & enemy;
+        wPawnEnpassant = pawn_attacks[white][fromSquare] & enpassantBitboard;
+        if (wPawnEnpassant) {
+            int toSquare = get_ls1b_index(wPawnEnpassant);
+            add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+        }
+
         while (wPawnTargets) {
             int toSquare = get_ls1b_index(wPawnTargets);
             int targetP = get_piece(board, toSquare)%6;
@@ -87,7 +93,7 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
                 add_move(move_list, encode_move(fromSquare, toSquare, P, targetP, 1, 1, 2, 0));
                 add_move(move_list, encode_move(fromSquare, toSquare, P, targetP, 1, 1, 3, 0));
             } else {
-                add_move(move_list, encode_move(fromSquare, toSquare, P, 0, 0, 1, 0, 0));
+                add_move(move_list, encode_move(fromSquare, toSquare, P, targetP, 0, 1, 0, 0));
             }
         }
     }
@@ -95,14 +101,20 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
 
 void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 bPawnTargets;
-
-    set_bit(enemy, enpassant);
+    U64 bPawnEnpassant;
+    U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
         int fromSquare = get_ls1b_index(bitboard);
         bitboard &= bitboard - 1;
 
         bPawnTargets = pawn_attacks[black][fromSquare] & enemy;
+        bPawnEnpassant = pawn_attacks[black][fromSquare] & enpassantBitboard;
+        if (bPawnEnpassant) {
+            int toSquare = get_ls1b_index(bPawnEnpassant);
+            add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+        }
+
         while (bPawnTargets) {
             int toSquare = get_ls1b_index(bPawnTargets);
             int targetP = get_piece(board, toSquare);
@@ -136,16 +148,16 @@ void castling_moves_white(struct Moves* move_list, struct Board* board) {
 }
 
 void castling_moves_black(struct Moves* move_list, struct Board* board) {
-    if (board->castle & wk) {
+    if (board->castle & bk) {
         if ((board->occupancies[both] & 96ULL) == 0) {
-            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, white, board)))
+            if (!(is_square_attacked(e8, white, board) || is_square_attacked(f8, white, board)))
                 add_move(move_list, encode_move(e8, g8, K, 0, 0, 0, 2, 0));
         }
     }
     
-    if (board->castle & wq) {
+    if (board->castle & bq) {
         if ((board->occupancies[both] & 14ULL) == 0) {
-            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, black, board)))
+            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, white, board)))
                 add_move(move_list, encode_move(e8, c8, K, 0, 0, 0, 3, 0));
         }
     }
@@ -351,54 +363,78 @@ const unsigned short castling_rights[64] = {
     13, 15, 15, 15, 12, 15, 15, 14
 };
 
-static inline int make_move(struct Board* board, int move) {
-    int side = board->side;
+int make_move(struct Board* board, int move) {
     int source = get_move_source(move);
     int target = get_move_target(move);
     int sourceP = get_move_sourcep(move);
     int isCapture = get_move_capture(move);
     int isPromotion = get_move_promotion(move);
+    int moveSpecial = get_move_special(move);
 
-    if (side) {  // black
+    board->enpassant = no_sq;
+
+    if (board->side == black) {
         sourceP += 6;
     }
     
     pop_bit(board->bitboards[sourceP], source);
 
     if (isPromotion) {
-        sourceP = get_move_special(move) + 1;
-        if (side == black) sourceP += 6;
+        sourceP = moveSpecial + 1;
+        if (board->side == black) sourceP += 6;
     }
 
     set_bit(board->bitboards[sourceP], target);
 
     if (isCapture) {
         int captured = get_move_targetp(move);
-        if (!side) {  // white
+        if (board->side == white) {
             captured += 6;
         }
-        pop_bit(board->bitboards[captured], target);
+        // print_move(move);
+        if (moveSpecial == 1) {
+            (board->side == white) ? pop_bit(board->bitboards[captured], target+8) : pop_bit(board->bitboards[captured], target-8);
+        } else {
+            pop_bit(board->bitboards[captured], target);
+        }
 
     } else if (!isPromotion) {
-        // king-side castling
-        if (get_move_special(move) == 2) {
-            if (side) {
-                pop_bit(board->bitboards[R], h8);
-                set_bit(board->bitboards[R], f8);
+        switch (moveSpecial)
+        {
+        case 1:  // double pawn push (need to set enpassant square)
+            if (board->side == white) {
+                board->enpassant = source - 8;
             } else {
+                board->enpassant = source + 8;
+            }
+            
+            break;
+
+        case 2: {  // king-side castling
+            if (board->side == white) {
                 pop_bit(board->bitboards[R], h1);
                 set_bit(board->bitboards[R], f1);
-            }
-        }
-        // queen-side castling
-        if (get_move_special(move) == 3) {
-            if (side) {
-                pop_bit(board->bitboards[r], a8);
-                set_bit(board->bitboards[r], d8);
             } else {
+                pop_bit(board->bitboards[r], h8);
+                set_bit(board->bitboards[r], f8);
+            }
+            break;
+        }
+
+        case 3: {  // queen-side castling
+            if (board->side == white) {
                 pop_bit(board->bitboards[R], a1);
                 set_bit(board->bitboards[R], d1);
+            } else {
+                pop_bit(board->bitboards[r], a8);
+                set_bit(board->bitboards[r], d8);
             }
+            break;
+        }
+            
+        
+        default:
+            break;
         }
     }
 
@@ -409,13 +445,15 @@ static inline int make_move(struct Board* board, int move) {
     board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
     board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
+    
+    int king_square = (board->side) ? get_ls1b_index(board->bitboards[k]) : get_ls1b_index(board->bitboards[K]);
+    board->side = (board->side) ^ 1;
 
-    board->side = side ^ 1;
-
-    if (is_square_attacked((side) ? get_ls1b_index(board->bitboards[K]) : get_ls1b_index(board->bitboards[k]), side, board)) {
+    if (is_square_attacked(king_square, board->side, board)) {
         // illegal move - take back
         return 0;
     }
+
 
     return 1;
 }
@@ -444,7 +482,7 @@ static inline void generate_moves(struct Board* board, struct Moves* move_list) 
         pawn_captures_black(move_list, board, board->bitboards[p], board->occupancies[white], board->enpassant);
         castling_moves_black(move_list, board);
         knight_quiet_moves(move_list, board->bitboards[n], ~(board->occupancies[both]));
-        knight_captures(move_list, board, board->bitboards[n], ~(board->occupancies[white]));
+        knight_captures(move_list, board, board->bitboards[n], board->occupancies[white]);
         king_quiet_moves(move_list, board->bitboards[k], ~(board->occupancies[both]));
         king_captures(move_list, board, board->bitboards[k], board->occupancies[white]);
         bishop_quiet_moves(move_list, board->bitboards[b], ~(board->occupancies[both]), board->occupancies[both]);

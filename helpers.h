@@ -404,7 +404,7 @@ void print_board_flipped(struct Board* board) {
     printf("\n    h g f e d c b a\n\n");
 }
 
-void print_move(unsigned int move) {
+void print_move_detailed(unsigned int move) {
     int from = get_move_source(move);
     int to = get_move_target(move);
     int code = get_move_code(move);
@@ -471,3 +471,48 @@ void print_move(unsigned int move) {
         }
     }
 }
+
+void print_move(unsigned int move) {
+    int from = get_move_source(move);
+    int to = get_move_target(move);
+    int code = get_move_code(move);
+
+    // printf("%u %u\n", move, code);
+    printf("%s%s", square_to_coordinates[from], square_to_coordinates[to]);
+
+    switch (code) {
+        case (8): {   // Knight-promotion
+            printf("k");
+            break;
+        }
+        case (9): {   // Bishop-promotion
+            printf("b");
+            break;
+        }
+        case (10): {   // Rook-promotion
+            printf("r");
+            break;
+        }
+        case (11): {   // Queen-promotion
+            printf("q");
+            break;
+        }
+        case (12): {  // Knight-promotion capture
+            printf("n");
+            break;
+        }
+        case (13): {  // Bishop-promotion capture
+            printf("b");
+            break;
+        }
+        case (14): {  // Rook-promotion capture
+            printf("r");
+            break;
+        }
+        case (15): {  // Queen-promotion capture
+            printf("q");
+            break;
+        }
+    }
+}
+

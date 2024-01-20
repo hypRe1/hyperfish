@@ -69,7 +69,6 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
 
 void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 wPawnTargets;
-    U64 wPawnEnpassant;
     U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
@@ -77,10 +76,13 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
         bitboard &= bitboard - 1;
 
         wPawnTargets = pawn_attacks[white][fromSquare] & enemy;
-        wPawnEnpassant = pawn_attacks[white][fromSquare] & enpassantBitboard;
-        if (wPawnEnpassant) {
-            int toSquare = get_ls1b_index(wPawnEnpassant);
-            add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+
+        if (enpassant != no_sq) {
+            U64 wPawnEnpassant = pawn_attacks[white][fromSquare] & enpassantBitboard;
+            if (wPawnEnpassant) {
+                int toSquare = get_ls1b_index(wPawnEnpassant);
+                add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+            }
         }
 
         while (wPawnTargets) {
@@ -101,7 +103,6 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
 
 void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 bPawnTargets;
-    U64 bPawnEnpassant;
     U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
@@ -109,10 +110,13 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
         bitboard &= bitboard - 1;
 
         bPawnTargets = pawn_attacks[black][fromSquare] & enemy;
-        bPawnEnpassant = pawn_attacks[black][fromSquare] & enpassantBitboard;
-        if (bPawnEnpassant) {
-            int toSquare = get_ls1b_index(bPawnEnpassant);
-            add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+
+        if (enpassant != no_sq) {
+            U64 bPawnEnpassant = pawn_attacks[black][fromSquare] & enpassantBitboard;
+            if (bPawnEnpassant) {
+                int toSquare = get_ls1b_index(bPawnEnpassant);
+                add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
+            }
         }
 
         while (bPawnTargets) {
@@ -392,7 +396,7 @@ int make_move(struct Board* board, int move) {
             captured += 6;
         }
         // print_move(move);
-        if (moveSpecial == 1) {
+        if ((moveSpecial == 1) & (!isPromotion)) {
             (board->side == white) ? pop_bit(board->bitboards[captured], target+8) : pop_bit(board->bitboards[captured], target-8);
         } else {
             pop_bit(board->bitboards[captured], target);

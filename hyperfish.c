@@ -57,17 +57,16 @@ int main() {
 
     struct Board board;
     struct Moves move_list;
-    parse_fen("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8", &board);
-    print_board(&board);
+    parse_fen(position3, &board);
+    print_board(&board, 0);
 
     long long start = timeInMilliseconds();
     long nodes = 0;
-    perft(2, &board);
+    
     // generate_moves(&board, &move_list);
-    // print_move_list(&move_list);
+    perft(7, &board);
     long long end = timeInMilliseconds();
     printf("\nTime taken to execute %llu ms", end-start);
     
     return 0;
 }
-

@@ -69,7 +69,6 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
 
 void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 wPawnTargets;
-    U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
         int fromSquare = lsb_index(bitboard);
@@ -78,7 +77,7 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
         wPawnTargets = pawn_attacks[white][fromSquare] & enemy;
 
         if (enpassant != no_sq) {
-            U64 wPawnEnpassant = pawn_attacks[white][fromSquare] & enpassantBitboard;
+            U64 wPawnEnpassant = pawn_attacks[white][fromSquare] & (1ULL << enpassant);
             if (wPawnEnpassant) {
                 int toSquare = lsb_index(wPawnEnpassant);
                 add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
@@ -103,7 +102,6 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
 
 void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 bPawnTargets;
-    U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
         int fromSquare = lsb_index(bitboard);
@@ -112,7 +110,7 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
         bPawnTargets = pawn_attacks[black][fromSquare] & enemy;
 
         if (enpassant != no_sq) {
-            U64 bPawnEnpassant = pawn_attacks[black][fromSquare] & enpassantBitboard;
+            U64 bPawnEnpassant = pawn_attacks[black][fromSquare] & (1ULL << enpassant);
             if (bPawnEnpassant) {
                 int toSquare = lsb_index(bPawnEnpassant);
                 add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));

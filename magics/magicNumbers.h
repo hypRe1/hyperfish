@@ -2,13 +2,6 @@
 
 typedef unsigned long long U64;
 
-// void init_magic_numbers() {
-//     for (int square = 0; square < 64; square++) 
-//         rook_magic_numbers[square] =  (square, rook_relevant_bits[square], 0);
-
-//     for (int square = 0; square < 64; square++) 
-//         bishop_magic_numbers[square] = find_magic_number(square, bishop_relevant_bits[square], 1);
-// }
 
 const U64 rook_magic_numbers[64] = {
     0x8a80104000800020ULL,

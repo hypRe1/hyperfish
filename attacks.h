@@ -1,7 +1,50 @@
 #pragma once
-#include "magics.h"
-#include "helpers.h"
-#include "random.h"
+#include "magics/magicNumbers.h"
+#include "macros.h"
+#include "board.h"
+#include <stdio.h>
+
+#define not_a_file (18374403900871474942ULL)
+#define not_h_file (9187201950435737471ULL)
+#define not_hg_file (4557430888798830399ULL)
+#define not_ab_file (18229723555195321596ULL)
+
+#define rank2 (71776119061217280ULL)
+#define rank3 (280375465082880ULL)
+#define rank6 (16711680)
+#define rank7 (65280ULL)
+
+const int bishop_relevant_bits[64] = {
+    6, 5, 5, 5, 5, 5, 5, 6, 
+    5, 5, 5, 5, 5, 5, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5, 
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 9, 9, 7, 5, 5, 
+    5, 5, 7, 7, 7, 7, 5, 5, 
+    5, 5, 5, 5, 5, 5, 5, 5, 
+    6, 5, 5, 5, 5, 5, 5, 6
+};
+
+const int rook_relevant_bits[64] = {
+    12, 11, 11, 11, 11, 11, 11, 12, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    11, 10, 10, 10, 10, 10, 10, 11, 
+    12, 11, 11, 11, 11, 11, 11, 12
+};
+
+U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask) {
+    U64 occupancy = 0ULL;
+    for (int count = 0; count < bits_in_mask; count++) {
+        int square = lsb_index(attack_mask);
+        pop_bit(attack_mask, square);
+        if (index & (1 << count)) occupancy |= (1ULL << square);
+    }
+    return occupancy;
+}
 
 U64 mask_pawn_attacks(int side, int square) {
     U64 bitboard = 0ULL | (1ULL << square);
@@ -38,7 +81,6 @@ U64 mask_king_attacks(int square) {
 }
 
 U64 mask_bishop_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
     U64 attacks = 0ULL;
 
     int r, f;
@@ -54,7 +96,6 @@ U64 mask_bishop_attacks(int square) {
 }
 
 U64 bishop_attacks_on_the_fly(int square, U64 blockers) {
-    U64 bitboard = 0ULL | (1ULL << square);
     U64 attacks = 0ULL;
 
     int r, f;
@@ -82,7 +123,6 @@ U64 bishop_attacks_on_the_fly(int square, U64 blockers) {
 }
 
 U64 mask_rook_attacks(int square) {
-    U64 bitboard = 0ULL | (1ULL << square);
     U64 attacks = 0ULL;
 
     int r, f;
@@ -98,7 +138,6 @@ U64 mask_rook_attacks(int square) {
 }
 
 U64 rook_attacks_on_the_fly(int square, U64 blockers) {
-    U64 bitboard = 0ULL | (1ULL << square);
     U64 attacks = 0ULL;
 
     int r, f;
@@ -123,61 +162,6 @@ U64 rook_attacks_on_the_fly(int square, U64 blockers) {
     }
 
     return attacks;
-}
-
-
-U64 generate_magic_number() {
-    return get_random_U64_number() & get_random_U64_number() & get_random_U64_number();
-}
-
-
-U64 find_magic_number(int square, int relevant_bits, int isBishop) {
-    U64 occupancies[4096];
-
-    U64 attacks[4096];
-
-    U64 used_attacks[4096];
-
-    U64 attack_mask = isBishop ? mask_bishop_attacks(square) : mask_rook_attacks(square);
-
-    int occupancy_indices = 1 << relevant_bits;
-
-    for (int index = 0; index < occupancy_indices; index++) {
-        occupancies[index] = set_occupancy(index, relevant_bits, attack_mask);
-        attacks[index] = isBishop ? bishop_attacks_on_the_fly(square, occupancies[index]) :
-                                    rook_attacks_on_the_fly(square, occupancies[index]);
-    }
-
-    // test magic numbers
-    for (int count; count < 100000000; count++) {
-        U64 magic_number = generate_magic_number();
-
-        // skip inappropriate magic numbers
-        if (count_bits((attack_mask * magic_number) & 0xFF00000000000000) < 6) continue;
-
-        memset(used_attacks, 0ULL, sizeof(used_attacks));
-
-        int index, fail;
-
-        // test magic index loop
-        for (index = 0, fail = 0; (!fail) && (index < occupancy_indices); index++) {
-            int magic_index = (int)((occupancies[index] * magic_number) >> (64 - relevant_bits));
-
-            if (used_attacks[magic_index] == 0ULL)
-                // init used attacks
-                used_attacks[magic_index] = attacks[index];
-
-            else if (used_attacks[magic_index] != attacks[index])
-                // magic index does not work
-                fail = 1;
-        }
-
-        if (!fail)
-            return magic_number;
-    }
-
-    printf("Failed to find magic number\nImpossible (*_*)");
-    return 0ULL;
 }
 
 U64 pawn_attacks[2][64];
@@ -246,20 +230,4 @@ static inline int is_square_attacked(int square, int side, struct Board* board) 
     if (get_rook_attacks(square, board->occupancies[both]) & ((side == white) ? (board->bitboards[R] | board->bitboards[Q]) : (board->bitboards[r] | board->bitboards[q]))) return 1;
     if (king_attacks[square] & ((side == white) ? board->bitboards[K] : board->bitboards[k])) return 1;
     return 0;
-}
-
-// print attacked squares
-void print_attacked_squares(int side, struct Board* board) {
-    printf("\n");
-    for (int rank = 0; rank < 8; rank++) {
-        printf("%d │ ", 8-rank);
-        for (int file = 0; file < 8; file++){
-            int square = rank * 8 + file;
-            printf("%d ", is_square_attacked(square, side, board) ? 1 : 0);
-        }
-        printf("\n");
-    }
-    
-    printf("  ╰────────────────\n");
-    printf("    a b c d e f g h\n\n");
 }

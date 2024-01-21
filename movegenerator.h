@@ -1,6 +1,6 @@
 #pragma once
-#include "helpers.h"
 #include "attacks.h"
+#include "moveEncoding.h"
 
 struct Moves {
     int moves[256];
@@ -23,7 +23,7 @@ void quiet_pawn_moves_white(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 wPawnTargets = (bitboard >> 8) & empty;
     U64 wPawnTargets2 = ((wPawnTargets & rank3) >> 8) & empty;
     while (wPawnTargets) {
-        int toSquare = get_ls1b_index(wPawnTargets);
+        int toSquare = lsb_index(wPawnTargets);
         int fromSquare = toSquare + 8;
         if (toSquare < a7) {
             add_move(move_list, encode_move(fromSquare, toSquare, P, 0, 1, 0, 0, 0));
@@ -36,7 +36,7 @@ void quiet_pawn_moves_white(struct Moves* move_list, U64 bitboard, U64 empty) {
         wPawnTargets &= wPawnTargets - 1;
     }
     while (wPawnTargets2) {
-        int toSquare = get_ls1b_index(wPawnTargets2);
+        int toSquare = lsb_index(wPawnTargets2);
         int fromSquare = toSquare + 16;
         add_move(move_list, encode_move(fromSquare, toSquare, P, 0, 0, 0, 1, 0));
         wPawnTargets2 &= wPawnTargets2 - 1;
@@ -47,7 +47,7 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 bPawnTargets = (bitboard << 8) & empty;
     U64 bPawnTargets2 = ((bPawnTargets & rank6) << 8) & empty;
     while (bPawnTargets) {
-        int toSquare = get_ls1b_index(bPawnTargets);
+        int toSquare = lsb_index(bPawnTargets);
         int fromSquare = toSquare - 8;
         if (toSquare > h2) {
             add_move(move_list, encode_move(fromSquare, toSquare, P, 0, 1, 0, 0, 0));
@@ -60,7 +60,7 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
         bPawnTargets &= bPawnTargets - 1;
     }
     while (bPawnTargets2) {
-        int toSquare = get_ls1b_index(bPawnTargets2);
+        int toSquare = lsb_index(bPawnTargets2);
         int fromSquare = toSquare - 16;
         add_move(move_list, encode_move(fromSquare, toSquare, P, 0, 0, 0, 1, 0));
         bPawnTargets2 &= bPawnTargets2 - 1;
@@ -72,7 +72,7 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
     U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         wPawnTargets = pawn_attacks[white][fromSquare] & enemy;
@@ -80,13 +80,13 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
         if (enpassant != no_sq) {
             U64 wPawnEnpassant = pawn_attacks[white][fromSquare] & enpassantBitboard;
             if (wPawnEnpassant) {
-                int toSquare = get_ls1b_index(wPawnEnpassant);
+                int toSquare = lsb_index(wPawnEnpassant);
                 add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
             }
         }
 
         while (wPawnTargets) {
-            int toSquare = get_ls1b_index(wPawnTargets);
+            int toSquare = lsb_index(wPawnTargets);
             int targetP = get_piece(board, toSquare)%6;
             wPawnTargets &= wPawnTargets - 1;
             if (toSquare < a7) {
@@ -106,7 +106,7 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
     U64 enpassantBitboard = 1ULL << enpassant;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         bPawnTargets = pawn_attacks[black][fromSquare] & enemy;
@@ -114,13 +114,13 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
         if (enpassant != no_sq) {
             U64 bPawnEnpassant = pawn_attacks[black][fromSquare] & enpassantBitboard;
             if (bPawnEnpassant) {
-                int toSquare = get_ls1b_index(bPawnEnpassant);
+                int toSquare = lsb_index(bPawnEnpassant);
                 add_move(move_list, encode_move(fromSquare, toSquare, P, P, 0, 1, 1, 0));
             }
         }
 
         while (bPawnTargets) {
-            int toSquare = get_ls1b_index(bPawnTargets);
+            int toSquare = lsb_index(bPawnTargets);
             int targetP = get_piece(board, toSquare);
             bPawnTargets &= bPawnTargets - 1;
             if (toSquare > h2) {
@@ -171,13 +171,13 @@ void knight_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 nTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         nTargets = knight_attacks[fromSquare] & empty;
 
         while (nTargets) {
-            int toSquare = get_ls1b_index(nTargets);
+            int toSquare = lsb_index(nTargets);
             nTargets &= nTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, N, 0, 0, 0, 0, 0));
@@ -189,13 +189,13 @@ void knight_captures(struct Moves* move_list, struct Board* board, U64 bitboard,
     U64 nTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         nTargets = knight_attacks[fromSquare] & enemy;
 
         while (nTargets) {
-            int toSquare = get_ls1b_index(nTargets);
+            int toSquare = lsb_index(nTargets);
             nTargets &= nTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, N, get_piece(board, toSquare)%6, 0, 1, 0, 0));
@@ -207,13 +207,13 @@ void king_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 kTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         kTargets = king_attacks[fromSquare] & empty;
 
         while (kTargets) {
-            int toSquare = get_ls1b_index(kTargets);
+            int toSquare = lsb_index(kTargets);
             kTargets &= kTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, K, 0, 0, 0, 0, 0));
@@ -225,13 +225,13 @@ void king_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U
     U64 kTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         kTargets = king_attacks[fromSquare] & enemy;
 
         while (kTargets) {
-            int toSquare = get_ls1b_index(kTargets);
+            int toSquare = lsb_index(kTargets);
             kTargets &= kTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, K, get_piece(board, toSquare)%6, 0, 1, 0, 0));
@@ -244,13 +244,13 @@ void bishop_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 oc
     U64 bTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         bTargets = get_bishop_attacks(fromSquare, occupancy) & empty;
 
         while (bTargets) {
-            int toSquare = get_ls1b_index(bTargets);
+            int toSquare = lsb_index(bTargets);
             bTargets &= bTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, B, 0, 0, 0, 0, 0));
@@ -262,13 +262,13 @@ void bishop_captures(struct Moves* move_list, struct Board* board, U64 bitboard,
     U64 bTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         bTargets = get_bishop_attacks(fromSquare, occupancy) & enemy;
 
         while (bTargets) {
-            int toSquare = get_ls1b_index(bTargets);
+            int toSquare = lsb_index(bTargets);
             bTargets &= bTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, B, get_piece(board, toSquare)%6, 0, 1, 0, 0));
@@ -280,13 +280,13 @@ void rook_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occu
     U64 rTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         rTargets = get_rook_attacks(fromSquare, occupancy) & empty;
 
         while (rTargets) {
-            int toSquare = get_ls1b_index(rTargets);
+            int toSquare = lsb_index(rTargets);
             rTargets &= rTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, R, 0, 0, 0, 0, 0));
@@ -298,13 +298,13 @@ void rook_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U
     U64 rTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         rTargets = get_rook_attacks(fromSquare, occupancy) & enemy;
 
         while (rTargets) {
-            int toSquare = get_ls1b_index(rTargets);
+            int toSquare = lsb_index(rTargets);
             rTargets &= rTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, R, get_piece(board, toSquare)%6, 0, 1, 0, 0));
@@ -319,13 +319,13 @@ void queen_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occ
     U64 qTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         qTargets = get_queen_attacks(fromSquare, occupancy) & empty;
 
         while (qTargets) {
-            int toSquare = get_ls1b_index(qTargets);
+            int toSquare = lsb_index(qTargets);
             qTargets &= qTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, Q, 0, 0, 0, 0, 0));
@@ -341,13 +341,13 @@ void queen_captures(struct Moves* move_list, struct Board* board, U64 bitboard, 
     U64 qTargets;
 
     while (bitboard) {
-        int fromSquare = get_ls1b_index(bitboard);
+        int fromSquare = lsb_index(bitboard);
         bitboard &= bitboard - 1;
 
         qTargets = get_queen_attacks(fromSquare, occupancy) & enemy;
 
         while (qTargets) {
-            int toSquare = get_ls1b_index(qTargets);
+            int toSquare = lsb_index(qTargets);
             qTargets &= qTargets - 1;
 
             add_move(move_list, encode_move(fromSquare, toSquare, Q, get_piece(board, toSquare)%6, 0, 1, 0, 0));
@@ -450,7 +450,7 @@ int make_move(struct Board* board, int move) {
     board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
     
-    int king_square = (board->side) ? get_ls1b_index(board->bitboards[k]) : get_ls1b_index(board->bitboards[K]);
+    int king_square = (board->side) ? lsb_index(board->bitboards[k]) : lsb_index(board->bitboards[K]);
     board->side = (board->side) ^ 1;
 
     if (is_square_attacked(king_square, board->side, board)) {

@@ -2,7 +2,8 @@
 
 A chess engine written in C from scratch
 
-## TODO:
+## TODO
+
 - Stuff
 - More stuff
 - A lot of stuff

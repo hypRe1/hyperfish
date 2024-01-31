@@ -1,3 +1,5 @@
+#pragma once
+
 #include "board.h"
 #include "movegenerator.h"
 #include "misc.h"
@@ -27,6 +29,7 @@ static inline void perft(int depth, struct Board* board) {
     U64 nodes;
     struct Board copy;
     struct Moves move_list;
+    long long start = timeInMilliseconds();
 
     generate_moves(board, &move_list);
     for (int move_count = 0; move_count < move_list.count; move_count++) {
@@ -40,5 +43,8 @@ static inline void perft(int depth, struct Board* board) {
         printf(": %llu\n", nodes);
         total += nodes;
     }
-    printf("\nNodes searched: %llu\n", total);
+    long long time_taken = timeInMilliseconds() - start;
+    printf("\nTime taken to execute: %llu ms\n", time_taken);
+    printf("Nodes searched: %llu\n", total);
+    printf("Nodes per second: %llu\n\n", (U64)(total/time_taken*1000));
 }

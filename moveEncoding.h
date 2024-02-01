@@ -144,5 +144,4 @@ void print_move(unsigned int move) {
             break;
         }
     }
-    // printf(" (%u)", move);
 }

@@ -2,6 +2,7 @@
 #include "board.h"
 #include "movegenerator.h"
 #include "moveEncoding.h"
+#include "evaluation.h"
 #include "perft.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -95,6 +96,8 @@ void parse_go(char *command, struct Board* board) {
 
     if (strstr(command, "perft") != NULL) {
         perft(depth, board);
+    } else {
+        printf("bestmove e2e4");
     }
 }
 
@@ -157,6 +160,7 @@ void uci_loop() {
             printf("id name hyperfish\n");
             printf("id author hypre\n");
             printf("uciok\n");
+            continue;
         }
 
         // showem who we are
@@ -170,6 +174,22 @@ void uci_loop() {
             continue;
         }
 
+        if (strncmp(input, "moves", 5) == 0) {
+            struct Board copy;
+            struct Moves move_list;
+            generate_moves(&board, &move_list);
+            for (int move_count = 0; move_count < move_list.count; move_count++) {
+                copy = board;
+                int move = move_list.moves[move_count];
+                if (!make_move(&copy, move))
+                    continue;
+
+                print_move(move);
+                printf("\n");
+
+                continue;
+            }
+        }
     }
 }
 

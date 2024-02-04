@@ -5,7 +5,7 @@
 #include "misc.h"
 
 static inline U64 perft_driver(struct Board* board, int depth) {
-    if (depth == 0) 
+    if (depth == 0)
         return 1;
 
     struct Moves move_list;

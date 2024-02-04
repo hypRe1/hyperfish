@@ -39,7 +39,7 @@ void parse_fen(struct Board* board, char *fen) {
         reset_board(board);
         return;
     }
-    
+
     fen += 2;
     while (*fen != ' ') {
         switch (*fen) {
@@ -77,7 +77,7 @@ void export_fen(struct Board* board, char* fen) {
         for (int file = 0; file < 8; file++) {
             int square = rank * 8 + file;
             int piece = -1;
-            
+
             for (int bb_piece = P; bb_piece <= k; bb_piece++) {
                 if (get_bit(board->bitboards[bb_piece], square)) piece = bb_piece;
             }
@@ -86,19 +86,19 @@ void export_fen(struct Board* board, char* fen) {
                 nEmpty += 1;
             } else {
                 if (nEmpty >= 1) {
-                    fen[index] = nEmpty + '0'; 
-                    nEmpty = 0; 
+                    fen[index] = nEmpty + '0';
+                    nEmpty = 0;
                     index++;
                 }
-                fen[index] = ascii_pieces[piece]; 
+                fen[index] = ascii_pieces[piece];
                 index++;
-            } 
+            }
         }
         if (nEmpty >= 1) {
-            fen[index] = nEmpty + '0'; 
+            fen[index] = nEmpty + '0';
             index++;
         }
-        
+
         if (rank != 7) {
             fen[index] = '/';
             index++;

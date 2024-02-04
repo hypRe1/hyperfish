@@ -15,24 +15,24 @@
 #define rank7 (65280ULL)
 
 const int bishop_relevant_bits[64] = {
-    6, 5, 5, 5, 5, 5, 5, 6, 
-    5, 5, 5, 5, 5, 5, 5, 5, 
-    5, 5, 7, 7, 7, 7, 5, 5, 
-    5, 5, 7, 9, 9, 7, 5, 5, 
-    5, 5, 7, 9, 9, 7, 5, 5, 
-    5, 5, 7, 7, 7, 7, 5, 5, 
-    5, 5, 5, 5, 5, 5, 5, 5, 
+    6, 5, 5, 5, 5, 5, 5, 6,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
 const int rook_relevant_bits[64] = {
-    12, 11, 11, 11, 11, 11, 11, 12, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
-    11, 10, 10, 10, 10, 10, 10, 11, 
+    12, 11, 11, 11, 11, 11, 11, 12,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
@@ -54,14 +54,14 @@ U64 mask_pawn_attacks(int side, int square) {
 
 U64 mask_knight_attacks(int square) {
     U64 bitboard = 0ULL | (1ULL << square);
-    return 0ULL | ((bitboard >> 17) & not_h_file) 
-                | ((bitboard >> 15) & not_a_file) 
-                | ((bitboard >> 10) & not_hg_file) 
+    return 0ULL | ((bitboard >> 17) & not_h_file)
+                | ((bitboard >> 15) & not_a_file)
+                | ((bitboard >> 10) & not_hg_file)
                 | ((bitboard >> 6) & not_ab_file)
 
-                | ((bitboard << 17) & not_a_file) 
-                | ((bitboard << 15) & not_h_file) 
-                | ((bitboard << 10) & not_ab_file) 
+                | ((bitboard << 17) & not_a_file)
+                | ((bitboard << 15) & not_h_file)
+                | ((bitboard << 10) & not_ab_file)
                 | ((bitboard << 6) & not_hg_file);
 }
 
@@ -151,7 +151,7 @@ U64 rook_attacks_on_the_fly(int square, U64 blockers) {
     for (r = tr - 1; r >= 0; r--) {
         attacks |= (1ULL << (r*8 + tf));
         if ((1ULL << (r*8 + tf)) & blockers) break;
-    } 
+    }
     for (f = tf + 1; f <= 7; f++) {
         attacks |= (1ULL << (tr*8 + f));
         if ((1ULL << (tr*8 + f)) & blockers) break;

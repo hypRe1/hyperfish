@@ -15,7 +15,7 @@ static inline int quiescence(struct Board* board, int alpha, int beta) {
     // fail-hard beta cutoff
     // node fails high
     if (evaluation >= beta) return beta;
-    
+
     // found better move (PV node)
     if (evaluation > alpha) alpha = evaluation;
 
@@ -25,7 +25,7 @@ static inline int quiescence(struct Board* board, int alpha, int beta) {
 
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         copy = *board;
-        
+
         int move = move_list.moves[move_count];
         if (make_move(&copy, move)) {
             ply++;
@@ -63,7 +63,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         copy = *board;
-        
+
         int move = move_list.moves[move_count];
         if (make_move(&copy, move)) {
             legal_moves++;

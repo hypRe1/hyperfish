@@ -18,33 +18,33 @@ int parse_move(struct Board* board, char *move_str) {
 
     int source = toSquare(move_str[0], move_str[1]);
     int target = toSquare(move_str[2], move_str[3]);
-    
+
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         int move = move_list.moves[move_count];
-        
+
         if (source == get_move_source(move) && target == get_move_target(move)) {
             // Check if promotion matches else continue
             if (get_move_promotion(move)) {
                 int piece = 1 + get_move_special(move);
                 if ((piece == Q || piece == q) && move_str[4] == 'q')
                     return move;
-                
+
                 else if ((piece == R || piece == r) && move_str[4] == 'r')
                     return move;
-                
+
                 else if ((piece == B || piece == b) && move_str[4] == 'b')
                     return move;
-                
+
                 else if ((piece == N || piece == n) && move_str[4] == 'n')
                     return move;
-                
+
                 continue;
             }
-            
+
             return move;
         }
     }
-    
+
     // return illegal move
     return 0;
 }
@@ -54,7 +54,7 @@ void parse_position(struct Board* board, char *command) {
 
     if (strncmp(command, "startpos", 8) == 0)
         parse_fen(board, start_position);
-    
+
     else {
         current_char = strstr(command, "fen");
 
@@ -65,25 +65,25 @@ void parse_position(struct Board* board, char *command) {
             parse_fen(board, current_char);
         }
     }
-    
+
     current_char = strstr(command, "moves");
-    
+
     if (current_char != NULL) {
         current_char += 6;
-        
+
         while(*current_char) {
             int move = parse_move(board, current_char);
-            
+
             if (move == 0)
                 break;
-            
+
             make_move(board, move);
-            
+
             while (*current_char && *current_char != ' ') current_char++;
-            
+
             current_char++;
         }
-        
+
         printf("%s\n", current_char);
     }
 }
@@ -195,7 +195,7 @@ void uci_loop() {
         if (strncmp(input, "captures", 8) == 0) {
             struct Board copy;
             struct Moves move_list;
-            generate_moves(&board, &move_list);
+            generate_captures(&board, &move_list);
             for (int move_count = 0; move_count < move_list.count; move_count++) {
                 copy = board;
                 int move = move_list.moves[move_count];
@@ -210,4 +210,3 @@ void uci_loop() {
         }
     }
 }
-

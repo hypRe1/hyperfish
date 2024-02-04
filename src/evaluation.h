@@ -34,7 +34,7 @@ const int pawn_score[64] =
      0,   0,   0,   0,   0,   0,   0,   0
 };
 
-const int knight_score[64] = 
+const int knight_score[64] =
 {
     -5,   0,   0,   0,   0,   0,   0,  -5,
     -5,   0,   0,  10,  10,   0,   0,  -5,
@@ -46,7 +46,7 @@ const int knight_score[64] =
     -5, -10,   0,   0,   0,   0, -10,  -5
 };
 
-const int bishop_score[64] = 
+const int bishop_score[64] =
 {
      0,   0,   0,   0,   0,   0,   0,   0,
      0,   0,   0,   0,   0,   0,   0,   0,
@@ -72,7 +72,7 @@ const int rook_score[64] =
 
 };
 
-const int king_score[64] = 
+const int king_score[64] =
 {
      0,   0,   0,   0,   0,   0,   0,   0,
      0,   0,   5,   5,   5,   5,   0,   0,

@@ -7,7 +7,7 @@ unsigned int random_state = 1804289383;
 // XORShift32 https://en.wikipedia.org/wiki/Xorshift
 unsigned int get_random_U32_number() {
     unsigned int number = random_state;
-    
+
     number ^= number << 13;
     number ^= number >> 17;
     number ^= number << 5;

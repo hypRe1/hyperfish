@@ -140,7 +140,7 @@ void castling_moves_white(struct Moves* move_list, struct Board* board) {
                 add_move(move_list, encode_move(e1, g1, K, 0, 0, 0, 2, 0));
         }
     }
-    
+
     if (board->castle & wq) {
         if ((board->occupancies[both] & 1008806316530991104ULL) == 0) {
             if (!(is_square_attacked(board, e1, black) || is_square_attacked(board, d1, black)))
@@ -156,7 +156,7 @@ void castling_moves_black(struct Moves* move_list, struct Board* board) {
                 add_move(move_list, encode_move(e8, g8, K, 0, 0, 0, 2, 0));
         }
     }
-    
+
     if (board->castle & bq) {
         if ((board->occupancies[both] & 14ULL) == 0) {
             if (!(is_square_attacked(board, e8, white) || is_square_attacked(board, d8, white)))
@@ -372,7 +372,7 @@ int make_move(struct Board* board, int move) {
     if (board->side == black) {
         sourceP += 6;
     }
-    
+
     pop_bit(board->bitboards[sourceP], source);
 
     if (isPromotion) {
@@ -403,7 +403,7 @@ int make_move(struct Board* board, int move) {
             } else {
                 board->enpassant = source + 8;
             }
-            
+
             break;
 
         case 2: {  // king-side castling
@@ -427,8 +427,8 @@ int make_move(struct Board* board, int move) {
             }
             break;
         }
-            
-        
+
+
         default:
             break;
         }
@@ -441,7 +441,7 @@ int make_move(struct Board* board, int move) {
     board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
     board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
-    
+
     int king_square = (board->side) ? lsb_index(board->bitboards[k]) : lsb_index(board->bitboards[K]);
     board->side = (board->side) ^ 1;
 

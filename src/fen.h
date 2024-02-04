@@ -3,7 +3,7 @@
 #include "macros.h"
 #include <stdio.h>
 
-void parse_fen(char *fen, struct Board* board) {
+void parse_fen(struct Board* board, char *fen) {
     reset_board(board);
     int nSlashes = 0;
     for (int square = 0; square < 64 && *fen && *fen != ' '; ) {

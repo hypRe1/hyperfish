@@ -6,7 +6,7 @@
 #include "attacks.h"
 
 int ply;
-int best_move;
+int best_move = 0;
 long int nodes;
 
 static inline int quiescence(struct Board* board, int alpha, int beta) {
@@ -51,10 +51,10 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 
     nodes++;
 
-    int in_check = is_square_attacked((board->side == white) ? lsb_index(board->bitboards[K]) : lsb_index(board->bitboards[k]), board->side ^ 1, board);
-    int legal_moves;
+    int in_check = is_square_attacked(board, (board->side == white) ? lsb_index(board->bitboards[K]) : lsb_index(board->bitboards[k]), board->side ^ 1);
+    int legal_moves = 0;
 
-    int best_sofar;
+    int best_sofar = 0;
     int old_alpha = alpha;
 
     struct Moves move_list;

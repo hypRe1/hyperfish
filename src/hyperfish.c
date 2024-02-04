@@ -21,7 +21,7 @@ int main() {
     int debug = 0;
     if (debug) {
         struct Board board;
-        parse_position(start_position, &board);
+        parse_position(&board, start_position);
         print_board(&board, 0);
         search_position(&board, 5);
     } else {

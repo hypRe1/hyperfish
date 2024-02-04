@@ -49,20 +49,20 @@ int parse_move(struct Board* board, char *move_str) {
     return 0;
 }
 
-void parse_position(char *command, struct Board* board) {
+void parse_position(struct Board* board, char *command) {
     char *current_char = command;
 
     if (strncmp(command, "startpos", 8) == 0)
-        parse_fen(start_position, board);
+        parse_fen(board, start_position);
     
     else {
         current_char = strstr(command, "fen");
 
         if (current_char == NULL)
-            parse_fen(start_position, board);
+            parse_fen(board, start_position);
         else {
             current_char += 4;
-            parse_fen(current_char, board);
+            parse_fen(board, current_char);
         }
     }
     
@@ -88,7 +88,7 @@ void parse_position(char *command, struct Board* board) {
     }
 }
 
-void parse_go(char *command, struct Board* board) {
+void parse_go(struct Board* board, char *command) {
     int depth = 6;
     char *current_depth = NULL;
 
@@ -96,7 +96,7 @@ void parse_go(char *command, struct Board* board) {
         depth = atoi(current_depth + 6);
 
     if (strstr(command, "perft") != NULL) {
-        perft(depth, board);
+        perft(board, depth);
     } else {
         search_position(board, depth);
     }
@@ -109,7 +109,7 @@ void uci_loop() {
     char input[2000];
 
     struct Board board;
-    parse_position("position startpos", &board);
+    parse_position(&board, "position startpos");
 
     while (1) {
         memset(input, 0, sizeof(input));
@@ -131,20 +131,20 @@ void uci_loop() {
         if (strncmp(input, "position", 8) == 0) {
             char *command = input;
             command += 9;
-            parse_position(command, &board);
+            parse_position(&board, command);
             continue;
         }
 
         if (strncmp(input, "pos", 3) == 0) {
             char *command = input;
             command += 4;
-            parse_position(command, &board);
+            parse_position(&board, command);
             continue;
         }
 
         // start new game
         if (strncmp(input, "ucinewgame", 10) == 0) {
-            parse_position("position startpos", &board);
+            parse_position(&board, "position startpos");
             continue;
         }
 
@@ -152,7 +152,7 @@ void uci_loop() {
         if (strncmp(input, "go", 2) == 0) {
             char *command = input;
             command += 3;
-            parse_go(command, &board);
+            parse_go(&board, command);
             continue;
         }
 
@@ -176,6 +176,23 @@ void uci_loop() {
         }
 
         if (strncmp(input, "moves", 5) == 0) {
+            struct Board copy;
+            struct Moves move_list;
+            generate_moves(&board, &move_list);
+            for (int move_count = 0; move_count < move_list.count; move_count++) {
+                copy = board;
+                int move = move_list.moves[move_count];
+                if (!make_move(&copy, move))
+                    continue;
+
+                print_move(move);
+                printf("\n");
+
+                continue;
+            }
+        }
+
+        if (strncmp(input, "captures", 8) == 0) {
             struct Board copy;
             struct Moves move_list;
             generate_moves(&board, &move_list);

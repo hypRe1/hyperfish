@@ -136,14 +136,14 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
 void castling_moves_white(struct Moves* move_list, struct Board* board) {
     if (board->castle & wk) {
         if ((board->occupancies[both] & 6917529027641081856ULL) == 0) {
-            if (!(is_square_attacked(e1, black, board) || is_square_attacked(f1, black, board)))
+            if (!(is_square_attacked(board, e1, black) || is_square_attacked(board, f1, black)))
                 add_move(move_list, encode_move(e1, g1, K, 0, 0, 0, 2, 0));
         }
     }
     
     if (board->castle & wq) {
         if ((board->occupancies[both] & 1008806316530991104ULL) == 0) {
-            if (!(is_square_attacked(e1, black, board) || is_square_attacked(d1, black, board)))
+            if (!(is_square_attacked(board, e1, black) || is_square_attacked(board, d1, black)))
                 add_move(move_list, encode_move(e1, c1, K, 0, 0, 0, 3, 0));
         }
     }
@@ -152,14 +152,14 @@ void castling_moves_white(struct Moves* move_list, struct Board* board) {
 void castling_moves_black(struct Moves* move_list, struct Board* board) {
     if (board->castle & bk) {
         if ((board->occupancies[both] & 96ULL) == 0) {
-            if (!(is_square_attacked(e8, white, board) || is_square_attacked(f8, white, board)))
+            if (!(is_square_attacked(board, e8, white) || is_square_attacked(board, f8, white)))
                 add_move(move_list, encode_move(e8, g8, K, 0, 0, 0, 2, 0));
         }
     }
     
     if (board->castle & bq) {
         if ((board->occupancies[both] & 14ULL) == 0) {
-            if (!(is_square_attacked(e8, white, board) || is_square_attacked(d8, white, board)))
+            if (!(is_square_attacked(board, e8, white) || is_square_attacked(board, d8, white)))
                 add_move(move_list, encode_move(e8, c8, K, 0, 0, 0, 3, 0));
         }
     }
@@ -311,9 +311,6 @@ void rook_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U
 }
 
 void queen_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occupancy) {
-    // generate_bishop_moves(bitboard, enemyOrEmpty, occupancy);
-    // generate_rook_moves(bitboard, enemyOrEmpty, occupancy);
-
     U64 qTargets;
 
     while (bitboard) {
@@ -333,9 +330,6 @@ void queen_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occ
 }
 
 void queen_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, U64 occupancy) {
-    // generate_bishop_moves(bitboard, enemyOrEmpty, occupancy);
-    // generate_rook_moves(bitboard, enemyOrEmpty, occupancy);
-
     U64 qTargets;
 
     while (bitboard) {
@@ -451,7 +445,7 @@ int make_move(struct Board* board, int move) {
     int king_square = (board->side) ? lsb_index(board->bitboards[k]) : lsb_index(board->bitboards[K]);
     board->side = (board->side) ^ 1;
 
-    if (is_square_attacked(king_square, board->side, board)) {
+    if (is_square_attacked(board, king_square, board->side)) {
         // illegal move - take back
         return 0;
     }

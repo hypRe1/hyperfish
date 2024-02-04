@@ -222,7 +222,7 @@ static inline U64 get_queen_attacks(int square, U64 occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
-static inline int is_square_attacked(int square, int side, struct Board* board) {
+static inline int is_square_attacked(struct Board* board, int square, int side) {
     if ((side == white) && (pawn_attacks[black][square] & board->bitboards[P])) return 1;
     if ((side == black) && (pawn_attacks[white][square] & board->bitboards[p])) return 1;
     if (knight_attacks[square] & ((side == white) ? board->bitboards[N] : board->bitboards[n])) return 1;

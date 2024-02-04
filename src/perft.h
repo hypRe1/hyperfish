@@ -4,7 +4,7 @@
 #include "movegenerator.h"
 #include "misc.h"
 
-static inline U64 perft_driver(int depth, struct Board* board) {
+static inline U64 perft_driver(struct Board* board, int depth) {
     if (depth == 0) 
         return 1;
 
@@ -17,14 +17,14 @@ static inline U64 perft_driver(int depth, struct Board* board) {
         copy = *board;
         int move = move_list.moves[move_count];
         if (make_move(&copy, move)) {
-            nodes += perft_driver(depth - 1, &copy);
+            nodes += perft_driver(&copy, depth - 1);
         }
 
     }
     return nodes;
 }
 
-static inline void perft(int depth, struct Board* board) {
+static inline void perft(struct Board* board, int depth) {
     U64 total = 0;
     U64 nodes;
     struct Board copy;
@@ -38,7 +38,7 @@ static inline void perft(int depth, struct Board* board) {
         if (!make_move(&copy, move))
             continue;
 
-        nodes = perft_driver(depth - 1, &copy);
+        nodes = perft_driver(&copy, depth - 1);
         print_move(move);
         printf(": %llu\n", nodes);
         total += nodes;

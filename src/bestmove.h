@@ -104,7 +104,7 @@ void search_position(struct Board* board, int depth) {
 
     if (best_move) {
         if (score >= (0xE000 - depth)) {
-            printf("info score mate %d depth %d nodes %ld\n", -(score-0xE000), depth, nodes);
+            printf("info score mate %d depth %d nodes %ld\n", (0xE000-score), depth, nodes);
             printf("bestmove ");
             print_move(best_move);
             printf("\n");

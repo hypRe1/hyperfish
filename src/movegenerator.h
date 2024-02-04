@@ -495,3 +495,24 @@ static inline void generate_moves(struct Board* board, struct Moves* move_list) 
         queen_captures(move_list, board, board->bitboards[q], board->occupancies[white], board->occupancies[both]);
     }
 }
+
+static inline void generate_captures(struct Board* board, struct Moves* move_list) {
+    int source_square, target_square;
+    memset(move_list->moves, 0U, sizeof(move_list->moves));
+    move_list->count = 0;
+    if (board->side == white) {
+        pawn_captures_white(move_list, board, board->bitboards[P], board->occupancies[black], board->enpassant);
+        knight_captures(move_list, board, board->bitboards[N], board->occupancies[black]);
+        king_captures(move_list, board, board->bitboards[K], board->occupancies[black]);
+        bishop_captures(move_list, board, board->bitboards[B], board->occupancies[black], board->occupancies[both]);
+        rook_captures(move_list, board, board->bitboards[R], board->occupancies[black], board->occupancies[both]);
+        queen_captures(move_list, board, board->bitboards[Q], board->occupancies[black], board->occupancies[both]);
+    } else if (board->side == black) {
+        pawn_captures_black(move_list, board, board->bitboards[p], board->occupancies[white], board->enpassant);
+        knight_captures(move_list, board, board->bitboards[n], board->occupancies[white]);
+        king_captures(move_list, board, board->bitboards[k], board->occupancies[white]);
+        bishop_captures(move_list, board, board->bitboards[b], board->occupancies[white], board->occupancies[both]);
+        rook_captures(move_list, board, board->bitboards[r], board->occupancies[white], board->occupancies[both]);
+        queen_captures(move_list, board, board->bitboards[q], board->occupancies[white], board->occupancies[both]);
+    }
+}

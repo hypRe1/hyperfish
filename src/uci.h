@@ -4,6 +4,7 @@
 #include "moveEncoding.h"
 #include "evaluation.h"
 #include "perft.h"
+#include "bestmove.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -97,7 +98,7 @@ void parse_go(char *command, struct Board* board) {
     if (strstr(command, "perft") != NULL) {
         perft(depth, board);
     } else {
-        printf("bestmove e2e4");
+        search_position(board, depth);
     }
 }
 

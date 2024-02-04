@@ -2,6 +2,7 @@
 #include "misc.h"
 #include "perft.h"
 #include "uci.h"
+#include "bestmove.h"
 
 // init attack tables
 void init_all() {
@@ -19,12 +20,10 @@ int main() {
 
     int debug = 0;
     if (debug) {
-        int score;
         struct Board board;
-        parse_position("position fen rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", &board);
-        score = evaluate(&board);
-        printf("%d\n", score);
-        
+        parse_position(start_position, &board);
+        print_board(&board, 0);
+        search_position(&board, 5);
     } else {
         uci_loop();
     }

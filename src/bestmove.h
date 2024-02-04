@@ -5,9 +5,9 @@
 #include "movegenerator.h"
 #include "attacks.h"
 
-int ply;
+int ply = 0;
 int best_move = 0;
-long int nodes;
+long int nodes = 0;
 
 static inline int quiescence(struct Board* board, int alpha, int beta) {
     int evaluation = evaluate(board);
@@ -87,7 +87,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
     // no legal moves in current position
     if (legal_moves == 0) {
         // king is in check (checkmate)
-        if (in_check) return -99000 + ply;
+        if (in_check) return -0xE000 + ply;
 
         // king is not in check (stalemate)
         else return 0;
@@ -100,11 +100,19 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 }
 
 void search_position(struct Board* board, int depth) {
-    int score = negamax(board, -90000, 90000, depth);
+    int score = negamax(board, -0xF000, 0xF000, depth);
+
     if (best_move) {
-        printf("info score cp %d depth %d nodes %ld\n", score, depth, nodes);
-        printf("bestmove ");
-        print_move(best_move);
-        printf("\n");
+        if (score >= (0xE000 - depth)) {
+            printf("info score mate %d depth %d nodes %ld\n", -(score-0xE000), depth, nodes);
+            printf("bestmove ");
+            print_move(best_move);
+            printf("\n");
+        } else {
+            printf("info score cp %d depth %d nodes %ld\n", score, depth, nodes);
+            printf("bestmove ");
+            print_move(best_move);
+            printf("\n");
+        }
     }
 }

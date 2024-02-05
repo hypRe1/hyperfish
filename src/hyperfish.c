@@ -9,6 +9,7 @@ void init_all() {
     init_leapers_attacks();
     init_slider_attacks(0);
     init_slider_attacks(1);
+    init_tables();
 }
 
 #define version "\x1B[36mv0.0.1\x1B[0m"
@@ -25,20 +26,8 @@ int main() {
         print_board(&board, 0);
         // search_position(&board, 5);
 
-        struct Moves move_list;
-
-        // generate moves
-        generate_moves(&board, &move_list);
-        sort_moves(&move_list);
-
-        printf("Move scores:\n\n");
-
-        // loop over moves within a move list
-        for (int count = 0; count <= move_list.count; count++) {
-            printf("move: ");
-            print_move(move_list.moves[count]);
-            printf(" score: %d\n", score_move(move_list.moves[count]));
-        }
+        printf("%d\n", mg_table[P][32]);
+        printf("%d\n", mg_value[P] + mg_pesto_table[P][32]);
 
     } else {
         uci_loop();

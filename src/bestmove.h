@@ -5,11 +5,56 @@
 #include "movegenerator.h"
 #include "attacks.h"
 
+// MVV LVA [aggressor][victim]
+static int mvv_lva[6][6] = {
+ 	105, 205, 305, 405, 505, 605,
+	104, 204, 304, 404, 504, 604,
+	103, 203, 303, 403, 503, 603,
+	102, 202, 302, 402, 502, 602,
+	101, 201, 301, 401, 501, 601,
+	100, 200, 300, 400, 500, 600,
+};
+
 int ply = 0;
 int best_move = 0;
 long int nodes = 0;
 
+static inline int score_move(int move) {
+    if (get_move_capture(move))
+        return mvv_lva[get_move_sourcep(move)][get_move_targetp(move)];
+    else
+        return 0;
+}
+
+static inline void sort_moves(struct Moves *move_list) {
+    int move_scores[move_list->count];
+    for (int count = 0; count < move_list->count; count++)
+        move_scores[count] = score_move(move_list->moves[count]);
+
+    int sorted = 0;
+    int temp;
+
+    while (!sorted) {
+        sorted = 1;
+        for (int i = 0, j = 1; j < move_list->count; i++, j++) {
+            if (move_scores[i] < move_scores[j]) {
+                sorted = 0;
+
+                temp = move_scores[i];
+                move_scores[i] = move_scores[j];
+                move_scores[j] = temp;
+
+                temp = move_list->moves[i];
+                move_list->moves[i] = move_list->moves[j];
+                move_list->moves[j] = temp;
+            }
+        }
+    }
+}
+
 static inline int quiescence(struct Board* board, int alpha, int beta) {
+    nodes++;
+
     int evaluation = evaluate(board);
 
     // fail-hard beta cutoff
@@ -60,6 +105,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
     struct Moves move_list;
     struct Board copy;
     generate_moves(board, &move_list);
+    sort_moves(&move_list);
 
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         copy = *board;
@@ -100,6 +146,8 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 }
 
 void search_position(struct Board* board, int depth) {
+    nodes = 0;
+    ply = 0;
     int score = negamax(board, -0xF000, 0xF000, depth);
 
     if (best_move) {

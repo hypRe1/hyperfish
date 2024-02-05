@@ -21,9 +21,25 @@ int main() {
     int debug = 0;
     if (debug) {
         struct Board board;
-        parse_position(&board, start_position);
+        parse_position(&board, "pos fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         print_board(&board, 0);
-        search_position(&board, 5);
+        // search_position(&board, 5);
+
+        struct Moves move_list;
+
+        // generate moves
+        generate_moves(&board, &move_list);
+        sort_moves(&move_list);
+
+        printf("Move scores:\n\n");
+
+        // loop over moves within a move list
+        for (int count = 0; count <= move_list.count; count++) {
+            printf("move: ");
+            print_move(move_list.moves[count]);
+            printf(" score: %d\n", score_move(move_list.moves[count]));
+        }
+
     } else {
         uci_loop();
     }

@@ -19,15 +19,12 @@ int main() {
     printf("%s\n%s\n\n", title, version);
     init_all();
 
-    int debug = 0;
+    int debug = 1;
     if (debug) {
         struct Board board;
-        parse_position(&board, "pos fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        parse_position(&board, "fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
         print_board(&board, 0);
-        // search_position(&board, 5);
-
-        printf("%d\n", mg_table[P][32]);
-        printf("%d\n", mg_value[P] + mg_pesto_table[P][32]);
+        search_position(&board, 5);
 
     } else {
         uci_loop();

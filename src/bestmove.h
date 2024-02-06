@@ -15,15 +15,22 @@ static int mvv_lva[6][6] = {
 	100, 200, 300, 400, 500, 600,
 };
 
+// killer moves [id][ply]
+int killer_moves[2][246];
+
 int ply = 0;
 int best_move = 0;
 long int nodes = 0;
 
 static inline int score_move(int move) {
-    if (get_move_capture(move))
-        return mvv_lva[get_move_sourcep(move)][get_move_targetp(move)];
-    else
+    if (get_move_capture(move)) return mvv_lva[get_move_sourcep(move)][get_move_targetp(move)];
+    else {
+        if (killer_moves[0][ply] == move) 
+            return 9000;
+        else if (killer_moves[1][ply] == move) 
+            return 8000;
         return 0;
+    }
 }
 
 static inline void sort_moves(struct Moves *move_list) {
@@ -67,6 +74,7 @@ static inline int quiescence(struct Board* board, int alpha, int beta) {
     struct Moves move_list;
     struct Board copy;
     generate_captures(board, &move_list);
+    sort_moves(&move_list);
 
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         copy = *board;
@@ -120,7 +128,13 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 
             // fail-hard beta cutoff
             // node fails high
-            if (score >= beta) return beta;
+            if (score >= beta) {
+                // store killer moves
+                killer_moves[1][ply] = killer_moves[0][ply];
+                killer_moves[0][ply] = move_list.moves[move_count];
+
+                return beta;
+            }
 
             // found better move (PV node)
             if (score > alpha) {

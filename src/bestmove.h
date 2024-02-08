@@ -105,6 +105,8 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
     nodes++;
 
     int in_check = is_square_attacked(board, (board->side == white) ? lsb_index(board->bitboards[K]) : lsb_index(board->bitboards[k]), board->side ^ 1);
+
+    if (in_check) depth++;
     int legal_moves = 0;
 
     int best_sofar = 0;

@@ -169,16 +169,9 @@ void search_position(struct Board* board, int depth) {
     int score = negamax(board, -0xF000, 0xF000, depth);
 
     if (best_move) {
-        if (score >= (0xE000 - depth)) {
-            printf("info score mate %d depth %d nodes %ld\n", (0xE000-score), depth, nodes);
-            printf("bestmove ");
-            print_move(best_move);
-            printf("\n");
-        } else {
-            printf("info score cp %d depth %d nodes %ld\n", score, depth, nodes);
-            printf("bestmove ");
-            print_move(best_move);
-            printf("\n");
-        }
+        printf("info score cp %d depth %d nodes %ld\n", score, depth, nodes);
+        printf("bestmove ");
+        print_move(best_move);
+        printf("\n");
     }
 }

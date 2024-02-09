@@ -131,7 +131,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
             // fail-hard beta cutoff
             // node fails high
             if (score >= beta) {
-                if (get_move_capture(move_list.moves[count]) == 0) {
+                if (get_move_capture(move_list.moves[move_count]) == 0) {
                     // store killer moves
                     killer_moves[1][ply] = killer_moves[0][ply];
                     killer_moves[0][ply] = move_list.moves[move_count];

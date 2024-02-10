@@ -5,6 +5,8 @@
 #include "movegenerator.h"
 #include "attacks.h"
 
+#define max_ply 64
+
 // MVV LVA [aggressor][victim]
 static int mvv_lva[6][6] = {
  	105, 205, 305, 405, 505, 605,
@@ -16,13 +18,18 @@ static int mvv_lva[6][6] = {
 };
 
 // killer moves [id][ply]
-int killer_moves[2][246];
+int killer_moves[2][max_ply];
+
+int pv_length[max_ply];
+int pv_table[max_ply][max_ply];
+
 
 int ply = 0;
-int best_move = 0;
 long int nodes = 0;
 
 static inline int score_move(int move) {
+    if (move == pv_table[0][ply]) return 10000;
+
     if (get_move_capture(move)) return mvv_lva[get_move_sourcep(move)][get_move_targetp(move)];
     else {
         if (killer_moves[0][ply] == move)
@@ -99,8 +106,13 @@ static inline int quiescence(struct Board* board, int alpha, int beta) {
 }
 
 static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
+    pv_length[ply] = ply;
+
     // base case
     if (depth == 0) return quiescence(board, alpha, beta);
+
+    // prevent overflow of arrays
+    if (ply > max_ply - 1) return evaluate(board);
 
     nodes++;
 
@@ -108,9 +120,6 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 
     if (in_check) depth++;
     int legal_moves = 0;
-
-    int best_sofar = 0;
-    int old_alpha = alpha;
 
     struct Moves move_list;
     struct Board copy;
@@ -143,7 +152,15 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
             // found better move (PV node)
             if (score > alpha) {
                 alpha = score;
-                if (ply == 0) best_sofar = move_list.moves[move_count];
+
+                // write PV move
+                pv_table[ply][ply] = move_list.moves[move_count];
+
+                // loop over the next ply
+                for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++)
+                    pv_table[ply][next_ply] = pv_table[ply+1][next_ply];
+
+                pv_length[ply] = pv_length[ply + 1];
             }
         }
     }
@@ -157,21 +174,56 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
         else return 0;
     }
 
-    if (old_alpha != alpha) best_move = best_sofar;
-
     // node fails low
     return alpha;
 }
 
 void search_position(struct Board* board, int depth) {
+    int score;
+
+    // clear global variables
     nodes = 0;
     ply = 0;
-    int score = negamax(board, -0xF000, 0xF000, depth);
+    memset(killer_moves, 0, sizeof(killer_moves));
+    memset(pv_table, 0, sizeof(pv_table));
+    memset(pv_length, 0, sizeof(pv_length));
 
-    if (best_move) {
-        printf("info score cp %d depth %d nodes %ld\n", score, depth, nodes);
-        printf("bestmove ");
-        print_move(best_move);
+    for (int current_depth = 1; current_depth <= depth; current_depth++) {
+        score = negamax(board, -0xF000, 0xF000, current_depth);
+
+        printf("info score cp %d depth %d nodes %ld pv ", score, current_depth, nodes);
+        for (int count = 0; count < pv_length[0]; count++) {
+            print_move(pv_table[0][count]);
+            printf(" ");
+        }
         printf("\n");
+
     }
+    printf("bestmove ");
+    print_move(pv_table[0][0]);
+    printf("\n");
+}
+
+void search_position_2(struct Board* board, int depth) {
+    int score;
+
+    // clear global variables
+    nodes = 0;
+    ply = 0;
+    memset(killer_moves, 0, sizeof(killer_moves));
+    memset(pv_table, 0, sizeof(pv_table));
+    memset(pv_length, 0, sizeof(pv_length));
+
+    score = negamax(board, -0xF000, 0xF000, depth);
+
+    printf("info score cp %d depth %d nodes %ld pv ", score, depth, nodes);
+    for (int count = 0; count < pv_length[0]; count++) {
+        print_move(pv_table[0][count]);
+        printf(" ");
+    }
+    printf("\n");
+
+    printf("bestmove ");
+    print_move(pv_table[0][0]);
+    printf("\n");
 }

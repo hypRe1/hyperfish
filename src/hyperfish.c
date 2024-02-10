@@ -19,12 +19,12 @@ int main() {
     printf("%s\n%s\n\n", title, version);
     init_all();
 
-    int debug = 1;
+    int debug = 0;
     if (debug) {
         struct Board board;
-        parse_position(&board, "fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        parse_fen(&board, kiwipete_position);
         print_board(&board, 0);
-        search_position(&board, 5);
+        search_position(&board, 6);
 
     } else {
         uci_loop();

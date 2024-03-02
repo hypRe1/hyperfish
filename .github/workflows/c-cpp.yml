@@ -12,5 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: test
+      run: ls
     - name: make
       run: (cd src && make)

@@ -27,7 +27,7 @@ int main() {
         search_position(&board, 6);
 
     } else {
-        uci_loop();
+        uci_loop()
     }
 
     return 0;

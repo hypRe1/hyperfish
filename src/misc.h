@@ -1,5 +1,6 @@
 #pragma once
 #include <sys/time.h>
+#include <stddef.h>
 
 long long timeInMilliseconds() {
     struct timeval tv;

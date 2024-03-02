@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: C CI
 
 on:
   push:
@@ -13,4 +13,4 @@ jobs:
 
     steps:
     - name: make
-      run: make
+      run: make -C src

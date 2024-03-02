@@ -17,5 +17,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: install crosscompiler
+      run: sudo apt-get install mingw-w64
     - name: make
       run: (cd src && make)

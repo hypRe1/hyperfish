@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: test
-      run: ls
+    - uses: actions/checkout@v2
     - name: make
       run: (cd src && make)

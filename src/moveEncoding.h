@@ -103,6 +103,11 @@ void print_move_detailed(unsigned int move) {
 }
 
 void print_move(unsigned int move) {
+    if (move == 0) {
+        printf("0000");
+        return;
+    }
+
     int from = get_move_source(move);
     int to = get_move_target(move);
     int code = get_move_code(move);

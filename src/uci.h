@@ -56,6 +56,7 @@ void parse_position(struct Board* board, char *command) {
         parse_fen(board, start_position);
 
     else {
+        // Parse FEN position
         current_char = strstr(command, "fen");
 
         if (current_char == NULL)
@@ -66,6 +67,7 @@ void parse_position(struct Board* board, char *command) {
         }
     }
 
+    // Parse position from UCI moves
     current_char = strstr(command, "moves");
 
     if (current_char != NULL) {
@@ -83,13 +85,11 @@ void parse_position(struct Board* board, char *command) {
 
             current_char++;
         }
-
-        printf("%s\n", current_char);
     }
 }
 
 void parse_go(struct Board* board, char *command) {
-    int depth = 6;
+    int depth = 6;  // default depth
     char *current_depth = NULL;
 
     if ((current_depth = strstr(command, "depth")))
@@ -118,16 +118,16 @@ void uci_loop() {
         if (!fgets(input, 2000, stdin)) continue;  // continue if no input
         if (input[0] == '\n') continue;  // continue if input is line break
 
-        // kill the chess engine
+        // Kill the chess engine
         if (strncmp(input, "quit", 4) == 0) break;
 
-        // tell GUI that engine is alive
+        // Tell GUI engine is alive
         if (strncmp(input, "isready", 7) == 0) {
             printf("readyok\n");
             continue;
         }
 
-        // parse position command
+        // Parse position command
         if (strncmp(input, "position", 8) == 0) {
             char *command = input;
             command += 9;
@@ -142,13 +142,13 @@ void uci_loop() {
             continue;
         }
 
-        // start new game
+        // Start new game
         if (strncmp(input, "ucinewgame", 10) == 0) {
             parse_position(&board, "position startpos");
             continue;
         }
 
-        // GO!!!
+        // Parse go command
         if (strncmp(input, "go", 2) == 0) {
             char *command = input;
             command += 3;
@@ -156,7 +156,7 @@ void uci_loop() {
             continue;
         }
 
-        // tellem who we are
+        // Return UCI info
         if (strncmp(input, "uci", 3) == 0) {
             printf("id name hyperfish\n");
             printf("id author hypre\n");
@@ -164,17 +164,19 @@ void uci_loop() {
             continue;
         }
 
-        // showem who we are
+        // Show board and all its bitboards
         if (strncmp(input, "show all", 8) == 0) {
             print_board(&board, 1);
             continue;
         }
 
+        // Show board
         if (strncmp(input, "show", 4) == 0) {
             print_board(&board, 0);
             continue;
         }
 
+        // Print all legal moves
         if (strncmp(input, "moves", 5) == 0) {
             struct Board copy;
             struct Moves move_list;
@@ -192,6 +194,7 @@ void uci_loop() {
             }
         }
 
+        // Print all legal captures
         if (strncmp(input, "captures", 8) == 0) {
             struct Board copy;
             struct Moves move_list;

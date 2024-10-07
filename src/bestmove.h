@@ -28,12 +28,17 @@ int ply = 0;
 long int nodes = 0;
 
 static inline int score_move(int move) {
+    // explore first if in principal variation
     if (move == pv_table[0][ply]) return 10000;
 
+    // return MVV LVA score if move is a capture
     if (get_move_capture(move)) return mvv_lva[get_move_sourcep(move)][get_move_targetp(move)];
     else {
+        // if first killer move return 9000
         if (killer_moves[0][ply] == move)
             return 9000;
+
+        // if second killer move return 8000
         else if (killer_moves[1][ply] == move)
             return 8000;
         return 0;
@@ -41,6 +46,7 @@ static inline int score_move(int move) {
 }
 
 static inline void sort_moves(struct Moves *move_list) {
+    // score each move and store in an array
     int move_scores[move_list->count];
     for (int count = 0; count < move_list->count; count++)
         move_scores[count] = score_move(move_list->moves[count]);
@@ -48,6 +54,7 @@ static inline void sort_moves(struct Moves *move_list) {
     int sorted = 0;
     int temp;
 
+    // bubble sort algorithm to order move_list by scores
     while (!sorted) {
         sorted = 1;
         for (int i = 0, j = 1; j < move_list->count; i++, j++) {
@@ -116,8 +123,10 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
 
     nodes++;
 
+    // check if king is in check by passing board, square king is on, and the opposite side into the is_square_attacked function
     int in_check = is_square_attacked(board, (board->side == white) ? lsb_index(board->bitboards[K]) : lsb_index(board->bitboards[k]), board->side ^ 1);
 
+    // if in check increase depth by 1 so lines with forced checks are explored further
     if (in_check) depth++;
     int legal_moves = 0;
 
@@ -126,6 +135,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
     generate_moves(board, &move_list);
     sort_moves(&move_list);
 
+    // iterate over move_list
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         copy = *board;
 
@@ -133,6 +143,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
         if (make_move(&copy, move)) {
             legal_moves++;
 
+            // recursion
             ply++;
             int score = -negamax(&copy, -beta, -alpha, depth-1);
             ply--;

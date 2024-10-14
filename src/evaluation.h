@@ -2,8 +2,6 @@
 #include "board.h"
 #include "macros.h"
 
-// TODO Make the best evaluation function ever
-// https://hxim.github.io/Stockfish-Evaluation-Guide/
 
 int mg_value[6] = {82, 337, 365, 477, 1025, 0};
 int eg_value[6] = {94, 281, 297, 512,  936, 0};
@@ -186,33 +184,40 @@ static inline int evaluate(struct Board* board) {
     U64 bitboard;
     int square;
 
+    // iterate over white's piece bitboards
     for (int piece = P; piece <= K; piece++) {
         bitboard = board->bitboards[piece];
+        // iterate over pieces in bitboard
         while (bitboard) {
             square = lsb_index(bitboard);
+            // update midgame and endgame scores based on piece square tables
             mgScore += mg_table[piece][square];
             egScore += eg_table[piece][square];
+            // increment gamePhase based on piece
             gamePhase += gamephaseInc[piece];
             bitboard &= bitboard - 1;
         }
     }
 
+    // iterate over black's piece bitboards
     for (int piece = p; piece <= k; piece++) {
         bitboard = board->bitboards[piece];
+        // iterate over pieces in bitboard
         while (bitboard) {
+            // update midgame and endgame scores based on piece square tables
             square = lsb_index(bitboard);
             mgScore -= mg_table[piece][square];
             egScore -= eg_table[piece][square];
+            // increment gamePhase based on piece
             gamePhase += gamephaseInc[piece];
             bitboard &= bitboard - 1;
         }
     }
 
+    // tapered evaluation
     int mgPhase = gamePhase;
     if (mgPhase > 24) mgPhase = 24;
     int egPhase = 24 - mgPhase;
-
     int score = (mgScore * mgPhase + egScore * egPhase) / 24;
-
     return (board->side == white) ? score : -score;
 }

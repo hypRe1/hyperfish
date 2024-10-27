@@ -9,21 +9,24 @@
 #include <stdio.h>
 #include <string.h>
 
-// Find encoded move value by comparing it to generated moves
+// find encoded move value by comparing it to generated moves
 int parse_move(struct Board* board, char *move_str) {
     struct Moves move_list;
     generate_moves(board, &move_list);
 
+    // parse algebraic notation coordinate
     #define toSquare(file, rank) ((file - 'a') + (8 - (rank - '0')) * 8)
 
     int source = toSquare(move_str[0], move_str[1]);
     int target = toSquare(move_str[2], move_str[3]);
 
+    // iterate over pseudo-legal moves
     for (int move_count = 0; move_count < move_list.count; move_count++) {
         int move = move_list.moves[move_count];
 
+        // check if source and target squares match
         if (source == get_move_source(move) && target == get_move_target(move)) {
-            // Check if promotion matches else continue
+            // check if promotion matches else continue
             if (get_move_promotion(move)) {
                 int piece = 1 + get_move_special(move);
                 if ((piece == Q || piece == q) && move_str[4] == 'q')
@@ -56,7 +59,7 @@ void parse_position(struct Board* board, char *command) {
         parse_fen(board, start_position);
 
     else {
-        // Parse FEN position
+        // parse FEN position
         current_char = strstr(command, "fen");
 
         if (current_char == NULL)
@@ -67,7 +70,7 @@ void parse_position(struct Board* board, char *command) {
         }
     }
 
-    // Parse position from UCI moves
+    // parse position from UCI moves
     current_char = strstr(command, "moves");
 
     if (current_char != NULL) {
@@ -118,16 +121,16 @@ void uci_loop() {
         if (!fgets(input, 2000, stdin)) continue;  // continue if no input
         if (input[0] == '\n') continue;  // continue if input is line break
 
-        // Kill the chess engine
+        // kill the chess engine
         if (strncmp(input, "quit", 4) == 0) break;
 
-        // Tell GUI engine is alive
+        // tell GUI engine is alive
         if (strncmp(input, "isready", 7) == 0) {
             printf("readyok\n");
             continue;
         }
 
-        // Parse position command
+        // parse position command
         if (strncmp(input, "position", 8) == 0) {
             char *command = input;
             command += 9;
@@ -135,6 +138,7 @@ void uci_loop() {
             continue;
         }
 
+        // alias for position command
         if (strncmp(input, "pos", 3) == 0) {
             char *command = input;
             command += 4;
@@ -142,13 +146,13 @@ void uci_loop() {
             continue;
         }
 
-        // Start new game
+        // start new game
         if (strncmp(input, "ucinewgame", 10) == 0) {
             parse_position(&board, "position startpos");
             continue;
         }
 
-        // Parse go command
+        // parse go command
         if (strncmp(input, "go", 2) == 0) {
             char *command = input;
             command += 3;
@@ -156,7 +160,7 @@ void uci_loop() {
             continue;
         }
 
-        // Return UCI info
+        // return UCI info
         if (strncmp(input, "uci", 3) == 0) {
             printf("id name hyperfish\n");
             printf("id author hypre\n");
@@ -164,19 +168,19 @@ void uci_loop() {
             continue;
         }
 
-        // Show board and all its bitboards
+        // show board and all its bitboards
         if (strncmp(input, "show all", 8) == 0) {
             print_board(&board, 1);
             continue;
         }
 
-        // Show board
+        // show board
         if (strncmp(input, "show", 4) == 0) {
             print_board(&board, 0);
             continue;
         }
 
-        // Print all legal moves
+        // print all legal moves
         if (strncmp(input, "moves", 5) == 0) {
             struct Board copy;
             struct Moves move_list;
@@ -194,7 +198,7 @@ void uci_loop() {
             }
         }
 
-        // Print all legal captures
+        // print all legal captures
         if (strncmp(input, "captures", 8) == 0) {
             struct Board copy;
             struct Moves move_list;

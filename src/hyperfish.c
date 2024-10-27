@@ -18,17 +18,6 @@ void init_all() {
 int main() {
     printf("%s\n%s\n\n", title, version);
     init_all();
-
-    int debug = 0;
-    if (debug) {
-        struct Board board;
-        parse_fen(&board, kiwipete_position);
-        print_board(&board, 0);
-        search_position(&board, 6);
-
-    } else {
-        uci_loop();
-    }
-
+    uci_loop();
     return 0;
 }

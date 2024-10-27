@@ -6,11 +6,10 @@ typedef unsigned long long U64;
 #define set_bit(bitboard, square) ((bitboard) |= (1ULL << (square)))
 #define pop_bit(bitboard, square) ((bitboard) &= ~(1ULL << (square)))
 
-#if defined(__GNUC__) || defined(__GNUG__) || 1
+#if defined(__GNUC__) || defined(__GNUG__)
 #define count_bits(bitboard) (__builtin_popcountll(bitboard))
 #else
-// count bits within a bitboard (Brian Kernighan's way)
-// removes lsb until empty
+// count bits within a bitboard removing lsb until empty
 static inline int count_bits(U64 bitboard) {
     int count = 0;
     while (bitboard) {
@@ -23,7 +22,7 @@ static inline int count_bits(U64 bitboard) {
 
 // Least significant bit
 // https://stackoverflow.com/questions/757059/position-of-least-significant-bit-that-is-set
-#if defined(__GNUC__) || defined(__GNUG__) || 1
+#if defined(__GNUC__) || defined(__GNUG__)
 #define lsb_index(bitboard) (__builtin_ctzll(bitboard))
 #else
 #define lsb_index(bitboard) (count_bits((bitboard & -bitboard) - 1))

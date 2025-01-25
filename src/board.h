@@ -2,11 +2,11 @@
 #include <string.h>
 #include "macros.h"
 struct Board {
-    U64 bitboards[12];
-    U64 occupancies[3];
-    int side;
-    int enpassant;
-    int castle;
+    U64 bitboards[12];  // Bitboards for each piece type
+    U64 occupancies[3];  // Bitboards for occupancies: white, black, both
+    int side;  // Side to move white = 0, black = 1
+    int enpassant;  // Enpassant target square
+    int castle;  // Castling rights using bit flags
 };
 
 enum {
@@ -54,6 +54,7 @@ int char_pieces[] = {
     ['k'] = k
 };
 
+// Reset board to empty state
 void reset_board(struct Board* board) {
     memset(board->bitboards, 0ULL, sizeof(board->bitboards));
     memset(board->occupancies, 0ULL, sizeof(board->occupancies));
@@ -62,6 +63,7 @@ void reset_board(struct Board* board) {
     board->castle = 0;
 }
 
+// Get piece type from square
 int get_piece(struct Board* board, int square) {
     for (int piece = P; piece <= k; piece++) {
         if (get_bit(board->bitboards[piece], square)) return piece;
@@ -71,6 +73,7 @@ int get_piece(struct Board* board, int square) {
 
 #include "fen.h"
 
+// Print a bitboard visualisation
 void print_bitboard(U64 bitboard) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {
@@ -85,6 +88,7 @@ void print_bitboard(U64 bitboard) {
     printf("\nBitboard: %llud\n\n", bitboard);
 }
 
+// Print the current board state with optional bitboard visualisation
 void print_board(struct Board* board, int includeBitboards) {
     printf("\n");
     for (int rank = 0; rank < 8; rank++) {

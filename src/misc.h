@@ -1,7 +1,7 @@
 #pragma once
 #include <sys/time.h>
-#include <stddef.h>
 
+// https://stackoverflow.com/a/44896326
 long long timeInMilliseconds() {
     struct timeval tv;
     gettimeofday(&tv,NULL);

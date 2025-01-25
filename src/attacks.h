@@ -14,6 +14,7 @@
 #define rank6 (16711680)
 #define rank7 (65280ULL)
 
+// Number of relevant bits for bishop magic lookups per square
 const int bishop_relevant_bits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
@@ -25,6 +26,7 @@ const int bishop_relevant_bits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
+// Number of relevant bits for rook magic lookups per square
 const int rook_relevant_bits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -36,6 +38,7 @@ const int rook_relevant_bits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
+// Generate occupancy pattern for given attack mask and index
 U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask) {
     U64 occupancy = 0ULL;
     for (int count = 0; count < bits_in_mask; count++) {
@@ -46,12 +49,16 @@ U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask) {
     return occupancy;
 }
 
+// Generate pawn attack mask
 U64 mask_pawn_attacks(int side, int square) {
     U64 bitboard = 0ULL | (1ULL << square);
+    // white pawns attack diagonally forward
     if (!side) return 0ULL | ((bitboard >> 7) & not_a_file) | ((bitboard >> 9) & not_h_file);
+    // black pawns attack diagonally backward
     return 0ULL | ((bitboard << 7) & not_h_file) | ((bitboard << 9) & not_a_file);
 }
 
+// Generate knight attack mask (L-shape)
 U64 mask_knight_attacks(int square) {
     U64 bitboard = 0ULL | (1ULL << square);
     return 0ULL | ((bitboard >> 17) & not_h_file)
@@ -65,6 +72,7 @@ U64 mask_knight_attacks(int square) {
                 | ((bitboard << 6) & not_hg_file);
 }
 
+// Generate king attack mask (adjacent squares)
 U64 mask_king_attacks(int square) {
     U64 bitboard = 0ULL | (1ULL << square);
     return 0ULL | (bitboard >> 8)
@@ -80,6 +88,7 @@ U64 mask_king_attacks(int square) {
                 | ((bitboard << 7) & not_h_file);
 }
 
+// Generate bishop attack mask (diagonals)
 U64 mask_bishop_attacks(int square) {
     U64 attacks = 0ULL;
 
@@ -87,6 +96,8 @@ U64 mask_bishop_attacks(int square) {
     int tr = square / 8;
     int tf = square % 8;
 
+    // Generate attacks in all 4 diagonal directions (excluding edges)
+    // Mask only focuses only on squares where blockers can exist (pieces that block a diagonal of the bishop)
     for (r = tr + 1, f = tf + 1; r <= 6 && f <= 6; r++, f++) attacks |= (1ULL << (r*8 + f));
     for (r = tr - 1, f = tf + 1; r >= 1 && f <= 6; r--, f++) attacks |= (1ULL << (r*8 + f));
     for (r = tr + 1, f = tf - 1; r <= 6 && f >= 1; r++, f--) attacks |= (1ULL << (r*8 + f));
@@ -95,6 +106,7 @@ U64 mask_bishop_attacks(int square) {
     return attacks;
 }
 
+// Calculate bishop attacks considering blocking pieces
 U64 bishop_attacks_on_the_fly(int square, U64 blockers) {
     U64 attacks = 0ULL;
 
@@ -122,6 +134,7 @@ U64 bishop_attacks_on_the_fly(int square, U64 blockers) {
     return attacks;
 }
 
+// Generate rook attack mask
 U64 mask_rook_attacks(int square) {
     U64 attacks = 0ULL;
 
@@ -129,6 +142,8 @@ U64 mask_rook_attacks(int square) {
     int tr = square / 8;
     int tf = square % 8;
 
+    // Generate attacks in horizontal/vertical directions
+    // Mask only focuses only on squares where blockers can exist (pieces that block a file or rank of the rook)
     for (r = tr + 1; r <= 6; r++) attacks |= (1ULL << (r*8 + tf));
     for (r = tr - 1; r >= 1; r--) attacks |= (1ULL << (r*8 + tf));
     for (f = tf + 1; f <= 6; f++) attacks |= (1ULL << (tr*8 + f));
@@ -137,6 +152,7 @@ U64 mask_rook_attacks(int square) {
     return attacks;
 }
 
+// Calculate rook attacks considering blocking pieces
 U64 rook_attacks_on_the_fly(int square, U64 blockers) {
     U64 attacks = 0ULL;
 
@@ -164,14 +180,16 @@ U64 rook_attacks_on_the_fly(int square, U64 blockers) {
     return attacks;
 }
 
-U64 pawn_attacks[2][64];
-U64 knight_attacks[64];
-U64 king_attacks[64];
-U64 bishop_masks[64];
-U64 rook_masks[64];
-U64 bishop_attacks[64][512];
-U64 rook_attacks[64][4096];
+// Pre-computed attack tables
+U64 pawn_attacks[2][64];  // [colour][square]
+U64 knight_attacks[64];  // [square]
+U64 king_attacks[64];  // [square]
+U64 bishop_masks[64];  // Attack masks for magic lookup
+U64 rook_masks[64];  // Attack masks for magic lookup
+U64 bishop_attacks[64][512];  // Magic attack table [square][occupancy]
+U64 rook_attacks[64][4096];  // Magica attack table [square][occupancy]
 
+// Initialise leaper pieces attack tables (pawns, knights, kings)
 void init_leapers_attacks() {
     for (int square = 0; square < 64; square++) {
         pawn_attacks[white][square] = mask_pawn_attacks(white, square);
@@ -181,6 +199,7 @@ void init_leapers_attacks() {
     }
 }
 
+// Initialise slider attack tables for either bishop or rook using magic bitboards
 void init_slider_attacks(int isBishop) {
     for (int square = 0; square < 64; square++) {
         bishop_masks[square] = mask_bishop_attacks(square);
@@ -193,6 +212,7 @@ void init_slider_attacks(int isBishop) {
 
         for (int index = 0; index < occupancy_indices; index++) {
             U64 occupancy = set_occupancy(index, relevant_bits_count, attack_mask);
+            // Calculate magic index and store attack pattern
             if (isBishop) {
                 int magic_index = (occupancy * bishop_magic_numbers[square]) >> (64-bishop_relevant_bits[square]);
                 bishop_attacks[square][magic_index] = bishop_attacks_on_the_fly(square, occupancy);
@@ -204,6 +224,7 @@ void init_slider_attacks(int isBishop) {
     }
 }
 
+// Get bishop attacks using magic bitboards
 static inline U64 get_bishop_attacks(int square, U64 occupancy) {
     occupancy &= bishop_masks[square];
     occupancy *= bishop_magic_numbers[square];
@@ -211,6 +232,7 @@ static inline U64 get_bishop_attacks(int square, U64 occupancy) {
     return bishop_attacks[square][occupancy];
 }
 
+// Get rook attacks using magic bitboards
 static inline U64 get_rook_attacks(int square, U64 occupancy) {
     occupancy &= rook_masks[square];
     occupancy *= rook_magic_numbers[square];
@@ -218,10 +240,12 @@ static inline U64 get_rook_attacks(int square, U64 occupancy) {
     return rook_attacks[square][occupancy];
 }
 
+// Combine bishop and rook attacks to get queen attacks
 static inline U64 get_queen_attacks(int square, U64 occupancy) {
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
 
+// Check if a square is attacked by a given side (used for castling checks)
 static inline int is_square_attacked(struct Board* board, int square, int side) {
     if ((side == white) && (pawn_attacks[black][square] & board->bitboards[P])) return 1;
     if ((side == black) && (pawn_attacks[white][square] & board->bitboards[p])) return 1;

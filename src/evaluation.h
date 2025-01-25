@@ -2,6 +2,9 @@
 #include "board.h"
 #include "macros.h"
 
+// Evaluation function adapted from the PeSTO chess engine
+// Uses piece-square tables and tapered evaluation to quickly evaluate positions
+// https://www.chessprogramming.org/PeSTO%27s_Evaluation_Function
 
 int mg_value[6] = {82, 337, 365, 477, 1025, 0};
 int eg_value[6] = {94, 281, 297, 512,  936, 0};

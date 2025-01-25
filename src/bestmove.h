@@ -189,6 +189,7 @@ static inline int negamax(struct Board* board, int alpha, int beta, int depth) {
     return alpha;
 }
 
+// Search position with iterative deepening
 void search_position(struct Board* board, int depth) {
     int score;
 
@@ -215,6 +216,7 @@ void search_position(struct Board* board, int depth) {
     printf("\n");
 }
 
+// Search position without iterative deepening
 void search_position_2(struct Board* board, int depth) {
     int score;
 

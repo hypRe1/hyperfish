@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// find encoded move value by comparing it to generated moves
+// find encoded move value from algebraic notation by comparing it to generated moves
 int parse_move(struct Board* board, char *move_str) {
     struct Moves move_list;
     generate_moves(board, &move_list);

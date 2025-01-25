@@ -51,16 +51,18 @@ U64 find_magic_number(int square, int relevant_bits, int isBishop) {
             return magic_number;
     }
 
-    printf("Failed to find magic number\nImpossible (*_*)");
+    printf("Failed to find magic number");
     return 0ULL;
 }
 
 void print_magic_numbers() {
-    printf("Rook magic numbers:\n");
+    printf("const U64 rook_magic_numbers[64] = {\n");
     for (int square = 0; square < 64; square++)
-        printf("%llx\n", find_magic_number(square, rook_relevant_bits[square], 0));
+        printf("    0x%llxULL,\n", find_magic_number(square, rook_relevant_bits[square], 0));
+    printf("};\n");
 
-    printf("\n\nBishop magic numbers:\n");
+    printf("\nconst U64 bishop_magic_numbers[64] = {\n");
     for (int square = 0; square < 64; square++) 
-        printf("%llx\n", find_magic_number(square, bishop_relevant_bits[square], 1));
+        printf("    0x%llxULL,\n", find_magic_number(square, bishop_relevant_bits[square], 1));
+    printf("};\n\n");
 }

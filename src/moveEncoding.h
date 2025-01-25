@@ -9,7 +9,10 @@
 // promotion: 1 bit
 // capture: 1 bit
 // special: 2 bits
-// heuristc: 10 bits
+// heuristc: 10 bits  (not used)
+
+// source piece and target piece are included to increase move ordering efficiency when using MVV/LVA
+// heuristic has no purpose as of now but could in future iterations
 
 // 0000 0000 0000 0000 0000 0000 0011 1111 source
 // 0000 0000 0000 0000 0000 1111 1100 0000 target
@@ -34,6 +37,7 @@
 #define get_move_code(move)         (((move) & 0x3c0000) >> 18)
 #define get_move_heuristic(move)    (((move) & 0xffc00000) >> 22)
 
+// Print move with more detail about captures and special moves for debugging
 void print_move_detailed(unsigned int move) {
     int from = get_move_source(move);
     int to = get_move_target(move);
@@ -102,7 +106,9 @@ void print_move_detailed(unsigned int move) {
     }
 }
 
+// Print move in uci format
 void print_move(unsigned int move) {
+    // UCI null move
     if (move == 0) {
         printf("0000");
         return;

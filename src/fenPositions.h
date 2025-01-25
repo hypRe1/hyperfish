@@ -1,6 +1,6 @@
 #pragma once
 
-// common positions and positions from cpw for perft debugging
+// common positions and positions from cpw (chess programming wiki) for perft debugging
 
 #define empty_board "8/8/8/8/8/8/8/8 w - -"
 #define start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

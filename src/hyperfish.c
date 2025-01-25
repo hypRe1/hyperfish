@@ -3,6 +3,7 @@
 #include "perft.h"
 #include "uci.h"
 #include "bestmove.h"
+// #include "magics/magicFinder.h"
 
 // init attack tables
 void init_all() {
@@ -16,6 +17,7 @@ void init_all() {
 #define title "\x1B[32mhyperfish\x1B[0m"
 
 int main() {
+    // print_magic_numbers();
     printf("%s\n%s\n\n", title, version);
     init_all();
     uci_loop();

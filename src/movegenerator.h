@@ -7,18 +7,22 @@ struct Moves {
     int count;
 };
 
+
+// add move to move list
 static inline void add_move(struct Moves* move_list, unsigned int move) {
     move_list->moves[move_list->count] = move;
     move_list->count++;
 }
 
+
+// print all moves in list
 void print_move_list(struct Moves* move_list) {
     for (int move_count = 0; move_count < move_list->count; move_count++)
         print_move(move_list->moves[move_count]);
     printf("Total number of moves: %d\n", move_list->count);
 }
 
-// 8/pp1pp1pP/8/5p2/k4P2/2p1K1P1/PPPPP3/8 w - - 0 1
+// add quite pawn moves for white to move list
 void quiet_pawn_moves_white(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 wPawnTargets = (bitboard >> 8) & empty;
     U64 wPawnTargets2 = ((wPawnTargets & rank3) >> 8) & empty;
@@ -43,6 +47,7 @@ void quiet_pawn_moves_white(struct Moves* move_list, U64 bitboard, U64 empty) {
     }
 }
 
+// add quite pawn moves for white to move list
 void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 bPawnTargets = (bitboard << 8) & empty;
     U64 bPawnTargets2 = ((bPawnTargets & rank6) << 8) & empty;
@@ -67,6 +72,7 @@ void quiet_pawn_moves_black(struct Moves* move_list, U64 bitboard, U64 empty) {
     }
 }
 
+// add pawn captures for white to move list
 void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 wPawnTargets;
 
@@ -100,6 +106,7 @@ void pawn_captures_white(struct Moves* move_list, struct Board* board, U64 bitbo
     }
 }
 
+// add pawn captures for black to move list
 void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, int enpassant) {
     U64 bPawnTargets;
 
@@ -133,6 +140,7 @@ void pawn_captures_black(struct Moves* move_list, struct Board* board, U64 bitbo
     }
 }
 
+// add white castling moves to move list
 void castling_moves_white(struct Moves* move_list, struct Board* board) {
     if (board->castle & wk) {
         if ((board->occupancies[both] & 6917529027641081856ULL) == 0) {
@@ -149,6 +157,7 @@ void castling_moves_white(struct Moves* move_list, struct Board* board) {
     }
 }
 
+// add black castling moves to move list
 void castling_moves_black(struct Moves* move_list, struct Board* board) {
     if (board->castle & bk) {
         if ((board->occupancies[both] & 96ULL) == 0) {
@@ -165,6 +174,7 @@ void castling_moves_black(struct Moves* move_list, struct Board* board) {
     }
 }
 
+// add quiet knight moves to move list
 void knight_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 nTargets;
 
@@ -183,6 +193,7 @@ void knight_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     }
 }
 
+// add knight capture moves to move list
 void knight_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy) {
     U64 nTargets;
 
@@ -201,6 +212,8 @@ void knight_captures(struct Moves* move_list, struct Board* board, U64 bitboard,
     }
 }
 
+
+// add king quiet moves to move list
 void king_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     U64 kTargets;
 
@@ -219,6 +232,7 @@ void king_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty) {
     }
 }
 
+// add king capture moves to move list
 void king_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy) {
     U64 kTargets;
 
@@ -238,6 +252,7 @@ void king_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U
 }
 
 
+// add bishop quiet moves to move list
 void bishop_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occupancy) {
     U64 bTargets;
 
@@ -256,6 +271,7 @@ void bishop_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 oc
     }
 }
 
+// add bishop capture moves to move list
 void bishop_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, U64 occupancy) {
     U64 bTargets;
 
@@ -274,6 +290,7 @@ void bishop_captures(struct Moves* move_list, struct Board* board, U64 bitboard,
     }
 }
 
+// add rook quiet moves to move list
 void rook_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occupancy) {
     U64 rTargets;
 
@@ -292,6 +309,7 @@ void rook_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occu
     }
 }
 
+// add rook capture moves to move list
 void rook_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, U64 occupancy) {
     U64 rTargets;
 
@@ -310,6 +328,7 @@ void rook_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U
     }
 }
 
+// add queen quiet moves to move list
 void queen_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occupancy) {
     U64 qTargets;
 
@@ -329,6 +348,7 @@ void queen_quiet_moves(struct Moves* move_list, U64 bitboard, U64 empty, U64 occ
 
 }
 
+// add queen capture moves to move list
 void queen_captures(struct Moves* move_list, struct Board* board, U64 bitboard, U64 enemy, U64 occupancy) {
     U64 qTargets;
 
@@ -359,7 +379,9 @@ const unsigned short castling_rights[64] = {
     13, 15, 15, 15, 12, 15, 15, 14
 };
 
+// push move onto board if illegal then return 0 else 1
 int make_move(struct Board* board, int move) {
+    // decode move
     int source = get_move_source(move);
     int target = get_move_target(move);
     int sourceP = get_move_sourcep(move);
@@ -387,7 +409,6 @@ int make_move(struct Board* board, int move) {
         if (board->side == white) {
             captured += 6;
         }
-        // print_move(move);
         if ((moveSpecial == 1) & (!isPromotion)) {
             (board->side == white) ? pop_bit(board->bitboards[captured], target+8) : pop_bit(board->bitboards[captured], target-8);
         } else {
@@ -434,6 +455,7 @@ int make_move(struct Board* board, int move) {
         }
     }
 
+    // update castling rights
     board->castle &= castling_rights[source];
     board->castle &= castling_rights[target];
 

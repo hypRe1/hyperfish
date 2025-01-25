@@ -2,25 +2,15 @@
 
 typedef unsigned long long U64;
 
-unsigned int random_state = 1804289383;
+// random seed for the PRNG
+U64 random_state = 11719352968791081550;
 
-// XORShift32 https://en.wikipedia.org/wiki/Xorshift
-unsigned int get_random_U32_number() {
-    unsigned int number = random_state;
-
-    number ^= number << 13;
-    number ^= number >> 17;
-    number ^= number << 5;
-
-    random_state = number;
-    return number;
-}
-
+// XORShift64 https://en.wikipedia.org/wiki/Xorshift
 U64 get_random_U64_number() {
-    U64 n1, n2, n3, n4;
-    n1 = (U64)(get_random_U32_number() & 0xFFFF);
-    n2 = (U64)(get_random_U32_number() & 0xFFFF);
-    n3 = (U64)(get_random_U32_number() & 0xFFFF);
-    n4 = (U64)(get_random_U32_number() & 0xFFFF);
-    return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
+	U64 new = random_state;
+	new ^= new << 13;
+	new ^= new >> 7;
+	new ^= new << 17;
+    random_state = new;
+	return new;
 }

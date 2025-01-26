@@ -250,8 +250,12 @@ static inline int is_square_attacked(struct Board* board, int square, int side) 
     if ((side == white) && (pawn_attacks[black][square] & board->bitboards[P])) return 1;
     if ((side == black) && (pawn_attacks[white][square] & board->bitboards[p])) return 1;
     if (knight_attacks[square] & ((side == white) ? board->bitboards[N] : board->bitboards[n])) return 1;
-    if (get_bishop_attacks(square, board->occupancies[both]) & ((side == white) ? (board->bitboards[B] | board->bitboards[Q]) : (board->bitboards[b] | board->bitboards[q]))) return 1;
-    if (get_rook_attacks(square, board->occupancies[both]) & ((side == white) ? (board->bitboards[R] | board->bitboards[Q]) : (board->bitboards[r] | board->bitboards[q]))) return 1;
+    if (get_bishop_attacks(square, board->occupancies[both]) & 
+        ((side == white) ? (board->bitboards[B] | board->bitboards[Q]) : (board->bitboards[b] | board->bitboards[q]))) 
+        return 1;
+    if (get_rook_attacks(square, board->occupancies[both]) & 
+        ((side == white) ? (board->bitboards[R] | board->bitboards[Q]) : (board->bitboards[r] | board->bitboards[q])))
+        return 1;
     if (king_attacks[square] & ((side == white) ? board->bitboards[K] : board->bitboards[k])) return 1;
     return 0;
 }

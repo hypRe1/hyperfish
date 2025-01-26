@@ -460,8 +460,14 @@ int make_move(struct Board* board, int move) {
     board->castle &= castling_rights[target];
 
     memset(board->occupancies, 0ULL, sizeof(board->occupancies));
-    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
-    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+
+    // set board occupancies bitboards
+    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] |
+                                board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
+
+    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] |
+                                board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+                                
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
 
     int king_square = (board->side) ? lsb_index(board->bitboards[k]) : lsb_index(board->bitboards[K]);

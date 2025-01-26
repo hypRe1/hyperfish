@@ -76,8 +76,12 @@ void parse_fen(struct Board* board, char *fen) {
     }
 
     // set board occupancies bitboards
-    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] | board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
-    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] | board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+    board->occupancies[white] = board->bitboards[P] | board->bitboards[N] | board->bitboards[B] |
+                                board->bitboards[R] | board->bitboards[K] | board->bitboards[Q];
+
+    board->occupancies[black] = board->bitboards[p] | board->bitboards[n] | board->bitboards[b] |
+                                board->bitboards[r] | board->bitboards[k] | board->bitboards[q];
+                                
     board->occupancies[both] = board->occupancies[white] | board->occupancies[black];
 }
 

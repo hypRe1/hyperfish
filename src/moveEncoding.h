@@ -25,7 +25,8 @@
 // 1111 1111 1100 0000 0000 0000 0000 0000 heuristic
 
 #define encode_move(source, target, sourcepiece, targetpiece, promotion, capture, special, heuristic) \
-    ((source) | ((target) << 6) | ((sourcepiece) << 12) | ((targetpiece) << 15) | ((special) << 18) | ((capture) << 20) | ((promotion) << 21) |  ((heuristic << 22)))
+    ((source) | ((target) << 6) | ((sourcepiece) << 12) | ((targetpiece) << 15) | ((special) << 18) | \
+    ((capture) << 20) | ((promotion) << 21) |  ((heuristic << 22)))
 
 #define get_move_source(move)       ((move) & 0x3f)
 #define get_move_target(move)       (((move) & 0xfc0) >> 6)
